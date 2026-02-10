@@ -9,76 +9,76 @@
 <body>
 
     <nav class="navbar">
-        <h2 id="main-title">🔥 Kanka Restoran</h2>
+        <h2 id="main-title">Kanka Restoran</h2>
         <div class="nav-actions">
             <span id="user-display" style="color: white; margin-right: 15px;"></span>
             <button onclick="openCart()" class="btn-cart" id="cart-btn">
-                🛒 Sepet (<span id="cart-count">0</span>)
+                Sepet (<span id="cart-count">0</span>)
             </button>
-            <button onclick="openOrderHistory()" class="btn-cart" style="margin-right: 10px;">📋 Siparişlerim</button>
+            <button onclick="openOrderHistory()" class="btn-cart" style="margin-right: 10px;">Siparislerim</button>
             <button onclick="logout()" class="btn-logout">Logout</button>
         </div>
     </nav>
 
     <div class="container">
         <div class="hero">
-            <h1 class="hero-title">Fine Dining • Kanka Restoran</h1>
-            <p class="hero-subtitle">Şefin özel menülerini yönet, restoranlarını ve kullanıcılarını tek panelden kontrol et.</p>
+            <h1 class="hero-title">Fine Dining - Kanka Restoran</h1>
+            <p class="hero-subtitle">Sefin ozel menulerini ve restoranlari tek panelden kontrol et.</p>
         </div>
 
         <div id="admin-area" class="admin-panel">
             <div class="admin-tabs" id="admin-tabs">
-                <button class="admin-tab active" data-target="section-menu">🍔 Menü Yönetimi</button>
-                <button class="admin-tab" data-target="section-restaurants">🏨 Restoranlar</button>
-                <button class="admin-tab" data-target="section-users">👤 Kullanıcılar</button>
-                <button class="admin-tab" data-target="section-orders">📦 Siparişler</button>
+                <button class="admin-tab active" data-target="section-menu">Menu Yonetimi</button>
+                <button class="admin-tab" data-target="section-restaurants">Restoranlar</button>
+                <button class="admin-tab" data-target="section-users">Kullanicilar</button>
+                <button class="admin-tab" data-target="section-orders">Siparisler</button>
             </div>
 
-            <h3 id="form-title">➕ Yeni Menü Ürünü Ekle</h3>
-            <small>Sadece <b>Admin</b> kullanıcılar ürün ekleyebilir / güncelleyebilir.</small>
+            <h3 id="form-title">Yeni Menu Urunu Ekle</h3>
+            <small>Sadece <b>Admin / SuperAdmin</b> kullanicilar urun ekleyebilir / guncelleyebilir.</small>
             <div class="form-row">
-                <input type="text" id="yName" placeholder="Ürün adı">
-                <input type="text" id="yDesc" placeholder="Açıklama">
-                <input type="number" id="yPrice" placeholder="Fiyat (₺)">
+                <input type="text" id="yName" placeholder="Urun adi">
+                <input type="text" id="yDesc" placeholder="Aciklama">
+                <input type="number" id="yPrice" placeholder="Fiyat (TL)">
                 <input type="number" id="yEnergy" placeholder="Kalori">
-                <button id="btn-action" onclick="handleAction()">SİSTEME KAYDET</button>
+                <button id="btn-action" onclick="handleAction()">SISTEME KAYDET</button>
             </div>
         </div>
 
         <section id="section-menu" class="section-visible">
             <div class="search-container">
-                <input type="text" id="searchInput" class="search-input" onkeyup="filterMenu()" placeholder="🔍 Menüde ara...">
+            <input type="text" id="searchInput" class="search-input" onkeyup="filterMenu()" placeholder="Menude ara...">
             </div>
 
-            <h2 class="list-title">Menü Listesi</h2>
+            <h2 class="list-title">Menu Listesi</h2>
             <div id="menu-listesi" class="menu-grid">Loading menu...</div>
         </section>
 
         <section id="section-restaurants" class="section-hidden">
             <h2 class="list-title">Restoranlar</h2>
             <div id="restaurant-list" class="menu-grid">
-                <p>Restoranlar yükleniyor...</p>
+                <p>Restoranlar yukleniyor...</p>
             </div>
         </section>
 
         <section id="section-users" class="section-hidden">
-            <h2 class="list-title">Kullanıcılar</h2>
+            <h2 class="list-title">Kullanicilar</h2>
             <div id="user-list" class="menu-grid">
-                <p>Kullanıcılar yükleniyor...</p>
+                <p>Kullanicilar yukleniyor...</p>
             </div>
         </section>
 
         <section id="section-orders" class="section-hidden">
-            <h2 class="list-title">Sipariş Yönetimi</h2>
+            <h2 class="list-title">Siparis Yonetimi</h2>
             <div id="order-list" class="menu-grid">
-                <p>Siparişler yükleniyor...</p>
+                <p>Siparisler yukleniyor...</p>
             </div>
         </section>
 
         <section id="section-order-history" class="section-hidden">
-            <h2 class="list-title">Sipariş Geçmişim</h2>
+            <h2 class="list-title">Siparis Gecmisim</h2>
             <div id="order-history-list" class="menu-grid">
-                <p>Siparişler yükleniyor...</p>
+                <p>Siparisler yukleniyor...</p>
             </div>
         </section>
     </div>
@@ -86,13 +86,13 @@
     <div id="cart-modal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeCart()">&times;</span>
-            <h2>🛒 Sepetim</h2>
+            <h2>Sepetim</h2>
             <div id="cart-items"></div>
             <div class="cart-footer">
                 <div class="cart-total">
                     <strong>Toplam: <span id="cart-total">0</span> TL</strong>
                 </div>
-                <button onclick="checkout()" class="btn-checkout">Sipariş Ver</button>
+                <button onclick="checkout()" class="btn-checkout">Siparis Ver</button>
             </div>
         </div>
     </div>
@@ -102,28 +102,35 @@
         let cart = JSON.parse(localStorage.getItem('cart') || '[]');
         let userId = parseInt(localStorage.getItem('userId') || '0');
         const userRole = localStorage.getItem('userRole');
+        const isAdmin = userRole === 'Admin' || userRole === 'SuperAdmin';
+        const isSuperAdmin = userRole === 'SuperAdmin';
         const userName = localStorage.getItem('userName');
 
-        // 🛡️ Yetki ve Güvenlik Kontrolü
         if (!userRole) {
             window.location.href = 'login.html';
         }
 
-        // Başlık Yönetimi
         document.getElementById('user-display').innerText = `Welcome, ${userName || 'User'}`;
         const titleElement = document.getElementById('main-title');
 
-        if (userRole === 'Admin') {
-            titleElement.innerText = "🔥 Kanka Restoran (Admin Panel)";
+        if (isAdmin) {
+            titleElement.innerText = userRole === 'SuperAdmin'
+                ? "Kanka Restoran (SuperAdmin Panel)"
+                : "Kanka Restoran (Admin Panel)";
         } else {
-            titleElement.innerText = "🍔 Kanka Restoran (Menu)";
+            titleElement.innerText = "Kanka Restoran (Menu)";
             document.getElementById('admin-area').style.display = 'none';
             document.getElementById('section-restaurants').style.display = 'none';
             document.getElementById('section-users').style.display = 'none';
         }
 
-        // Admin sekme tıklamaları
-        if (userRole === 'Admin') {
+        if (!isSuperAdmin) {
+            const usersTab = document.querySelector('.admin-tab[data-target="section-users"]');
+            if (usersTab) usersTab.style.display = 'none';
+            document.getElementById('section-users').style.display = 'none';
+        }
+
+        if (isAdmin) {
             const tabs = document.querySelectorAll('.admin-tab');
             tabs.forEach(tab => {
                 tab.addEventListener('click', () => {
@@ -145,13 +152,11 @@
             });
         }
 
-        // 🚪 Logout
         function logout() {
             localStorage.clear();
             window.location.href = 'login.html';
         }
 
-        // 📋 Menüyü Yükle (Yeni İngilizce Parametrelerle)
         function loadMenu() {
             fetch('/api/MenuDetail')
                 .then(res => {
@@ -164,25 +169,24 @@
                         html = '<p style="text-align:center;">No items found in menu.</p>';
                     } else {
                         data.forEach(item => {
-                            // Tarih formatlama
                             let dateStr = item.createdDate ? new Date(item.createdDate).toLocaleDateString('tr-TR') : 'N/A';
 
-                            let buttons = userRole === 'Admin' ? `
+                            let buttons = isAdmin ? `
                                     <div class="btn-group">
-                                        <button class="btn-edit" onclick="setUpdateMode(${item.id}, '${item.foodName}', '${item.description}', ${item.price}, ${item.calories})">✏️ EDIT</button>
-                                        <button class="btn-del" onclick="deleteItem(${item.id})">🗑️ DELETE</button>
+                                        <button class="btn-edit" onclick="setUpdateMode(${item.id}, '${item.foodName}', '${item.description}', ${item.price}, ${item.calories})">EDIT</button>
+                                        <button class="btn-del" onclick="deleteItem(${item.id})">DELETE</button>
                                     </div>` : `
                                     <div class="btn-group">
-                                        <button class="btn-add-cart" onclick="addToCart(${item.id}, '${item.foodName}', ${item.price})">🛒 Sepete Ekle</button>
+                                        <button class="btn-add-cart" onclick="addToCart(${item.id}, '${item.foodName}', ${item.price})">Sepete Ekle</button>
                                     </div>`;
 
                             html += `
                                     <div class="card">
-                                        <h3>🍔 ${item.foodName}</h3>
+                                        <h3>${item.foodName}</h3>
                                         <p>${item.description}</p>
-                                        <p class="price-text">💰 Price: ${item.price} TL</p>
-                                        <small>🔥 Energy: ${item.calories} kcal</small><br>
-                                        <small style="color: #888; font-size: 11px;">🗓️ Added: ${dateStr}</small>
+                                        <p class="price-text">Price: ${item.price} TL</p>
+                                        <small>Energy: ${item.calories} kcal</small><br>
+                                        <small style="color: #888; font-size: 11px;">Added: ${dateStr}</small>
                                         ${buttons}
                                     </div>`;
                         });
@@ -194,7 +198,6 @@
                 });
         }
 
-        // 🔍 Arama Fonksiyonu (Dinamik Filtreleme)
         function filterMenu() {
             let input = document.getElementById('searchInput').value.toLowerCase();
             let cards = document.getElementsByClassName('card');
@@ -205,7 +208,6 @@
             }
         }
 
-        // ✏️ Edit Mode
         function setUpdateMode(id, name, desc, price, energy) {
             updateId = id;
             document.getElementById('yName').value = name;
@@ -213,12 +215,11 @@
             document.getElementById('yPrice').value = price;
             document.getElementById('yEnergy').value = energy;
 
-            document.getElementById('form-title').innerText = "✏️ Edit Item";
+            document.getElementById('form-title').innerText = "Edit Item";
             document.getElementById('btn-action').innerText = "UPDATE ITEM";
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // 💾 Save/Update
         function handleAction() {
             const payload = {
                 id: updateId || 0,
@@ -242,7 +243,6 @@
             });
         }
 
-        // 🗑️ Delete
         function deleteItem(id) {
             if (confirm("Are you sure you want to delete this item?")) {
                 fetch(`/api/MenuDetail/${id}`, { method: 'DELETE' })
@@ -250,20 +250,19 @@
             }
         }
 
-        // 🌐 Restoranları Yükle (Admin için)
         function loadRestaurants() {
             fetch('/api/Restaurant')
                 .then(res => res.ok ? res.json() : Promise.reject())
                 .then(data => {
                     if (!Array.isArray(data) || data.length === 0) {
                         document.getElementById('restaurant-list').innerHTML =
-                            '<p style="text-align:center;">Hiç restoran bulunamadı.</p>';
+                            '<p style="text-align:center;">Hic restoran bulunamadi.</p>';
                         return;
                     }
 
                     const html = data.map(r => `
                             <div class="card">
-                                <h3>🏨 ${r.restaurantName}</h3>
+                                <h3>${r.restaurantName}</h3>
                                 <p>${r.address || 'Adres bilgisi yok'}</p>
                             </div>`).join('');
 
@@ -271,44 +270,48 @@
                 })
                 .catch(() => {
                     document.getElementById('restaurant-list').innerHTML =
-                        '<p style="color:red; text-align:center;">Restoranlar yüklenirken hata oluştu.</p>';
+                        '<p style="color:red; text-align:center;">Restoranlar yuklenirken hata olustu.</p>';
                 });
         }
 
-        // 👤 Kullanıcıları Yükle (Admin için)
         function loadUsers() {
+            if (!isSuperAdmin) {
+                document.getElementById('user-list').innerHTML =
+                    '<p style="text-align:center;">Bu alani sadece SuperAdmin gorebilir.</p>';
+                return;
+            }
             fetch('/api/Auth/users')
                 .then(res => res.ok ? res.json() : Promise.reject())
                 .then(data => {
                     if (!Array.isArray(data) || data.length === 0) {
                         document.getElementById('user-list').innerHTML =
-                            '<p style="text-align:center;">Hiç kullanıcı yok.</p>';
+                            '<p style="text-align:center;">Hic kullanici yok.</p>';
                         return;
                     }
 
                     const html = data.map(u => `
                             <div class="card">
-                                <h3>👤 ${u.username}</h3>
+                                <h3>${u.username}</h3>
                                 <p>Mevcut rol: <strong>${u.role}</strong></p>
                                 <div style="margin-top:8px; display:flex; gap:6px; align-items:center;">
                                     <select id="role-${u.id}">
                                         <option value="User" ${u.role === 'User' ? 'selected' : ''}>User</option>
                                         <option value="Admin" ${u.role === 'Admin' ? 'selected' : ''}>Admin</option>
+                                        <option value="SuperAdmin" ${u.role === 'SuperAdmin' ? 'selected' : ''}>SuperAdmin</option>
                                     </select>
-                                    <button class="btn-edit" style="flex:0 0 auto;" onclick="updateUserRole(${u.id})">Rolü Kaydet</button>
+                                    <button class="btn-edit" style="flex:0 0 auto;" onclick="updateUserRole(${u.id})">Rol Kaydet</button>
                                 </div>
-                                <small>Oluşturulma: ${u.createdDate ? new Date(u.createdDate).toLocaleDateString('tr-TR') : ''}</small>
+                                <small>Olusturulma: ${u.createdDate ? new Date(u.createdDate).toLocaleDateString('tr-TR') : ''}</small>
                             </div>`).join('');
 
                     document.getElementById('user-list').innerHTML = html;
                 })
                 .catch(() => {
                     document.getElementById('user-list').innerHTML =
-                        '<p style="color:red; text-align:center;">Kullanıcılar yüklenirken hata oluştu.</p>';
+                        '<p style="color:red; text-align:center;">Kullanicilar yuklenirken hata olustu.</p>';
                 });
         }
 
-        // Kullanıcının rolünü API üzerinden güncelle
         function updateUserRole(id) {
             const select = document.getElementById(`role-${id}`);
             if (!select) return;
@@ -322,13 +325,12 @@
             })
                 .then(res => res.ok ? res.json() : Promise.reject())
                 .then(() => {
-                    alert('Rol güncellendi.');
+                    alert('Rol guncellendi.');
                     loadUsers();
                 })
-                .catch(() => alert('Rol güncellenirken hata oluştu.'));
+                .catch(() => alert('Rol guncellenirken hata olustu.'));
         }
 
-        // 🛒 SEPET İŞLEMLERİ
         function updateCartCount() {
             const total = cart.reduce((sum, item) => sum + item.quantity, 0);
             document.getElementById('cart-count').textContent = total;
@@ -358,7 +360,7 @@
         function renderCart() {
             const cartItemsDiv = document.getElementById('cart-items');
             if (cart.length === 0) {
-                cartItemsDiv.innerHTML = '<p style="text-align:center; padding:20px;">Sepetiniz boş.</p>';
+                cartItemsDiv.innerHTML = '<p style="text-align:center; padding:20px;">Sepetiniz bos.</p>';
                 document.getElementById('cart-total').textContent = '0';
                 return;
             }
@@ -378,7 +380,7 @@
                             <button onclick="changeQuantity(${index}, -1)" class="btn-qty">-</button>
                             <span>${item.quantity}</span>
                             <button onclick="changeQuantity(${index}, 1)" class="btn-qty">+</button>
-                            <button onclick="removeFromCart(${index})" class="btn-del" style="padding:5px 10px;">🗑️</button>
+                            <button onclick="removeFromCart(${index})" class="btn-del" style="padding:5px 10px;">X</button>
                         </div>
                     </div>
                 `;
@@ -404,17 +406,17 @@
 
         function checkout() {
             if (cart.length === 0) {
-                alert('Sepetiniz boş!');
+                alert('Sepetiniz bos!');
                 return;
             }
 
             if (!userId || userId === 0) {
-                alert('Kullanıcı bilgisi bulunamadı. Lütfen tekrar giriş yapın.');
+                alert('Kullanici bilgisi bulunamadi. Lutfen tekrar giris yapin.');
                 return;
             }
 
             const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            const notes = prompt('Sipariş notu eklemek ister misiniz? (Opsiyonel)') || '';
+            const notes = prompt('Siparis notu eklemek ister misiniz? (Opsiyonel)') || '';
 
             const orderData = {
                 userId: userId,
@@ -433,7 +435,7 @@
             })
                 .then(res => res.ok ? res.json() : Promise.reject())
                 .then(() => {
-                    alert('Siparişiniz başarıyla oluşturuldu!');
+                    alert('Siparisiniz basariyla olusturuldu!');
                     cart = [];
                     updateCartCount();
                     closeCart();
@@ -441,10 +443,9 @@
                         loadOrderHistory();
                     }
                 })
-                .catch(() => alert('Sipariş oluşturulurken hata oluştu.'));
+                .catch(() => alert('Siparis olusturulurken hata olustu.'));
         }
 
-        // 📋 SİPARİŞ GEÇMİŞİ
         function openOrderHistory() {
             document.querySelectorAll('section[id^="section-"]').forEach(sec => {
                 sec.classList.add('section-hidden');
@@ -457,7 +458,7 @@
 
         function loadOrderHistory() {
             if (!userId || userId === 0) {
-                document.getElementById('order-history-list').innerHTML = '<p>Kullanıcı bilgisi bulunamadı.</p>';
+                document.getElementById('order-history-list').innerHTML = '<p>Kullanici bilgisi bulunamadi.</p>';
                 return;
             }
 
@@ -466,7 +467,7 @@
                 .then(data => {
                     if (!Array.isArray(data) || data.length === 0) {
                         document.getElementById('order-history-list').innerHTML =
-                            '<p style="text-align:center;">Henüz siparişiniz yok.</p>';
+                            '<p style="text-align:center;">Henuz siparisiniz yok.</p>';
                         return;
                     }
 
@@ -485,13 +486,13 @@
                         
                         return `
                             <div class="card">
-                                <h3>Sipariş #${order.id}</h3>
+                                <h3>Siparis #${order.id}</h3>
                                 <p><strong>Durum:</strong> <span style="color:${statusColors[order.status] || '#666'}; font-weight:bold;">${order.status}</span></p>
                                 <p><strong>Toplam:</strong> ${order.totalAmount.toFixed(2)} TL</p>
                                 <p><strong>Tarih:</strong> ${new Date(order.createdDate).toLocaleString('tr-TR')}</p>
                                 ${order.notes ? `<p><strong>Not:</strong> ${order.notes}</p>` : ''}
                                 <details style="margin-top:10px;">
-                                    <summary style="cursor:pointer; color:#3b82f6;">Ürünler</summary>
+                                    <summary style="cursor:pointer; color:#3b82f6;">Urunler</summary>
                                     <ul style="margin-top:8px; padding-left:20px;">${itemsHtml}</ul>
                                 </details>
                             </div>
@@ -502,18 +503,17 @@
                 })
                 .catch(() => {
                     document.getElementById('order-history-list').innerHTML =
-                        '<p style="color:red; text-align:center;">Siparişler yüklenirken hata oluştu.</p>';
+                        '<p style="color:red; text-align:center;">Siparisler yuklenirken hata olustu.</p>';
                 });
         }
 
-        // 📦 ADMIN SİPARİŞ YÖNETİMİ
         function loadOrders() {
             fetch('/api/Order/admin/all')
                 .then(res => res.ok ? res.json() : Promise.reject())
                 .then(data => {
                     if (!Array.isArray(data) || data.length === 0) {
                         document.getElementById('order-list').innerHTML =
-                            '<p style="text-align:center;">Henüz sipariş yok.</p>';
+                            '<p style="text-align:center;">Henuz siparis yok.</p>';
                         return;
                     }
 
@@ -534,7 +534,7 @@
 
                         return `
                             <div class="card">
-                                <h3>Sipariş #${order.id} - ${order.userName || 'Bilinmeyen'}</h3>
+                                <h3>Siparis #${order.id} - ${order.userName || 'Bilinmeyen'}</h3>
                                 <p><strong>Durum:</strong> 
                                     <select id="status-${order.id}" onchange="updateOrderStatus(${order.id})" style="margin-left:8px; padding:4px 8px; border-radius:6px;">
                                         ${statusOptions.map(s => `<option value="${s}" ${order.status === s ? 'selected' : ''}>${s}</option>`).join('')}
@@ -544,10 +544,10 @@
                                 <p><strong>Tarih:</strong> ${new Date(order.createdDate).toLocaleString('tr-TR')}</p>
                                 ${order.notes ? `<p><strong>Not:</strong> ${order.notes}</p>` : ''}
                                 <details style="margin-top:10px;">
-                                    <summary style="cursor:pointer; color:#3b82f6;">Ürünler</summary>
+                                    <summary style="cursor:pointer; color:#3b82f6;">Urunler</summary>
                                     <ul style="margin-top:8px; padding-left:20px;">${itemsHtml}</ul>
                                 </details>
-                                <button onclick="cancelOrder(${order.id})" class="btn-del" style="margin-top:10px; width:100%;">Siparişi İptal Et</button>
+                                <button onclick="cancelOrder(${order.id})" class="btn-del" style="margin-top:10px; width:100%;">Siparisi Iptal Et</button>
                             </div>
                         `;
                     }).join('');
@@ -556,7 +556,7 @@
                 })
                 .catch(() => {
                     document.getElementById('order-list').innerHTML =
-                        '<p style="color:red; text-align:center;">Siparişler yüklenirken hata oluştu.</p>';
+                        '<p style="color:red; text-align:center;">Siparisler yuklenirken hata olustu.</p>';
                 });
         }
 
@@ -571,25 +571,24 @@
             })
                 .then(res => res.ok ? res.json() : Promise.reject())
                 .then(() => {
-                    alert('Sipariş durumu güncellendi.');
+                    alert('Siparis durumu guncellendi.');
                     loadOrders();
                 })
-                .catch(() => alert('Durum güncellenirken hata oluştu.'));
+                .catch(() => alert('Durum guncellenirken hata olustu.'));
         }
 
         function cancelOrder(orderId) {
-            if (!confirm('Bu siparişi iptal etmek istediğinize emin misiniz?')) return;
+            if (!confirm('Bu siparisi iptal etmek istediginize emin misiniz?')) return;
 
             fetch(`/api/Order/${orderId}`, { method: 'DELETE' })
                 .then(res => res.ok ? res.json() : Promise.reject())
                 .then(() => {
-                    alert('Sipariş iptal edildi.');
+                    alert('Siparis iptal edildi.');
                     loadOrders();
                 })
-                .catch(() => alert('Sipariş iptal edilirken hata oluştu.'));
+                .catch(() => alert('Siparis iptal edilirken hata olustu.'));
         }
 
-        // Modal dışına tıklanınca kapat
         window.onclick = function(event) {
             const modal = document.getElementById('cart-modal');
             if (event.target === modal) {
@@ -597,13 +596,11 @@
             }
         }
 
-        // İlk yükleme
         updateCartCount();
         loadMenu();
         if (userRole === 'Admin') {
             loadRestaurants();
             loadUsers();
-            // Admin sipariş sekmesine tıklandığında yükle
             document.querySelector('[data-target="section-orders"]')?.addEventListener('click', () => {
                 setTimeout(loadOrders, 100);
             });

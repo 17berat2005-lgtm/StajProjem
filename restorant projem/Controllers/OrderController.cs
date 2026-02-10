@@ -19,7 +19,7 @@ public class OrderController : ControllerBase
     public async Task<IActionResult> AddToCart([FromBody] CartRequest request)
     {
         var menuItem = await _context.MenuDetails.FindAsync(request.MenuDetailId);
-        if (menuItem == null) return NotFound("Ürün bulunamadı.");
+        if (menuItem == null) return NotFound("Urun bulunamadi.");
 
         return Ok(new
         {
@@ -36,7 +36,7 @@ public class OrderController : ControllerBase
     {
         var userId = request.UserId;
         var user = await _context.Users.FindAsync(userId);
-        if (user == null) return NotFound("Kullanıcı bulunamadı.");
+        if (user == null) return NotFound("Kullanici bulunamadi.");
 
         var order = new Order
         {
@@ -69,7 +69,7 @@ public class OrderController : ControllerBase
 
         await _context.SaveChangesAsync();
 
-        return Ok(new { message = "Sipariş oluşturuldu.", orderId = order.Id });
+        return Ok(new { message = "Siparis olusturuldu.", orderId = order.Id });
     }
 
     [HttpGet("user/{userId}")]
@@ -135,12 +135,12 @@ public class OrderController : ControllerBase
     public async Task<IActionResult> UpdateOrderStatus(int orderId, [FromBody] UpdateStatusRequest request)
     {
         var order = await _context.Orders.FindAsync(orderId);
-        if (order == null) return NotFound("Sipariş bulunamadı.");
+        if (order == null) return NotFound("Siparis bulunamadi.");
 
         order.Status = request.Status;
         await _context.SaveChangesAsync();
 
-        return Ok(new { message = "Sipariş durumu güncellendi.", order.Status });
+        return Ok(new { message = "Siparis durumu guncellendi.", order.Status });
     }
 
     [HttpDelete("{orderId}")]
@@ -150,13 +150,13 @@ public class OrderController : ControllerBase
             .Include(o => o.OrderItems)
             .FirstOrDefaultAsync(o => o.Id == orderId);
 
-        if (order == null) return NotFound("Sipariş bulunamadı.");
+        if (order == null) return NotFound("Siparis bulunamadi.");
 
         _context.OrderItems.RemoveRange(order.OrderItems ?? new List<OrderItem>());
         _context.Orders.Remove(order);
         await _context.SaveChangesAsync();
 
-        return Ok(new { message = "Sipariş iptal edildi." });
+        return Ok(new { message = "Siparis iptal edildi." });
     }
 }
 

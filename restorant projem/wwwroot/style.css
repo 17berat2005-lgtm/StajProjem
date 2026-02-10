@@ -13,7 +13,7 @@ body {
     color: #e5e7eb;
 }
 
-/* Login Sayfası */
+/* Login Sayfasi */
 .login-body {
     display: flex;
     align-items: center;
@@ -98,7 +98,7 @@ body {
     font-weight: 600;
 }
 
-/* Üst Navbar */
+/* Ust Navbar */
 .navbar {
     background: linear-gradient(90deg, #1f2933, #1b365d);
     color: white;
@@ -151,7 +151,7 @@ body {
     margin: 0 auto;
 }
 
-/* Hero alanı */
+/* Hero alani */
 .hero {
     text-align: center;
     margin-bottom: 26px;
@@ -170,7 +170,7 @@ body {
     color: #d1d5db;
 }
 
-/* Admin sekme menüsü */
+/* Admin sekme menusu */
 .admin-tabs {
     display: flex;
     gap: 10px;
@@ -274,7 +274,7 @@ input:focus, select:focus {
     box-shadow: 0 8px 22px rgba(5,150,105,0.35);
 }
 
-/* Liste başlığı ve arama */
+/* Liste basligi ve arama */
 .list-title {
     margin: 10px 0 8px;
     font-size: 20px;
@@ -466,7 +466,7 @@ input:focus, select:focus {
     color: #000;
 }
 
-/* Sepet İçeriği */
+/* Sepet Icerigi */
 .cart-item {
     display: flex;
     justify-content: space-between;
@@ -526,7 +526,7 @@ input:focus, select:focus {
     box-shadow: 0 8px 22px rgba(5,150,105,0.35);
 }
 
-/* Küçük responsive dokunuşlar */
+/* Kucuk responsive dokunuslar */
 @media (max-width: 768px) {
     .navbar {
         padding: 12px 18px;

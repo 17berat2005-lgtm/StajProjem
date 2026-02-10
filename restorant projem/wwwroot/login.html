@@ -2,27 +2,27 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Kanka Restoran | Giriş</title>
+    <title>Kanka Restoran | Giris</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="login-body">
     <div class="login-overlay">
         <div class="login-panel admin-panel">
             <div class="login-logo">
-                <span class="logo-icon">🍽️</span>
+                <span class="logo-icon">::</span>
                 <span class="logo-text">Kanka Restoran</span>
             </div>
-            <h3>Hoş geldin kanka!</h3>
-            <small>Lütfen kullanıcı adı ve şifrenle panele giriş yap.</small>
+            <h3>Hos geldin kanka!</h3>
+            <small>Lutfen kullanici adi ve sifrenle panele giris yap.</small>
 
             <div class="form-row login-form-column">
-                <input type="text" id="user" placeholder="Kullanıcı Adı">
-                <input type="password" id="pass" placeholder="Şifre">
-                <button id="btn-login" class="btn-login" onclick="login()">Giriş Yap</button>
+                <input type="text" id="user" placeholder="Kullanici Adi">
+                <input type="password" id="pass" placeholder="Sifre">
+                <button id="btn-login" class="btn-login" onclick="login()">Giris Yap</button>
             </div>
 
             <a href="register.html" class="login-link">
-                Yeni misafir misin? <span>Kayıt Ol</span>
+                Yeni misafir misin? <span>Kayit Ol</span>
             </a>
         </div>
     </div>
@@ -40,7 +40,7 @@
                     localStorage.setItem('userName', user.username);
                     localStorage.setItem('userId', user.id || user.ID);
                     window.location.href = 'index.html';
-                }).catch(() => alert("Hatalı giriş kanka!"));
+                }).catch(() => alert("Hatali giris kanka!"));
         }
     </script>
 </body>

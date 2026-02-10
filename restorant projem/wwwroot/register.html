@@ -2,24 +2,24 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Kayıt Ol</title>
+    <title>Kayit Ol</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body style="background:radial-gradient(circle at top left,#ffb347,#ffcc33,#f4f7f6); font-family:sans-serif; text-align:center; padding-top:100px;">
     <div class="admin-panel" style="max-width:360px;margin:0 auto;border-left-color:#10b981;">
-        <h2>📝 Kayıt Ol</h2>
+        <h2>Kayit Ol</h2>
         <div class="form-row" style="margin-top:18px;flex-direction:column;">
-            <input type="text" id="rUser" placeholder="Kullanıcı Adı">
-            <input type="password" id="rPass" placeholder="Şifre">
-            <button onclick="kayit()" id="btn-register">HESAP OLUŞTUR</button>
+            <input type="text" id="rUser" placeholder="Kullanici Adi">
+            <input type="password" id="rPass" placeholder="Sifre">
+            <button onclick="kayit()" id="btn-register">HESAP OLUSTUR</button>
         </div>
-        <a href="login.html" style="display:block;margin-top:15px;color:#1f2933;">Giriş Yap</a>
+        <a href="login.html" style="display:block;margin-top:15px;color:#1f2933;">Giris Yap</a>
     </div>
     <script>
         function kayit() {
             const data = { username: document.getElementById('rUser').value, password: document.getElementById('rPass').value };
             fetch('/api/Auth/register', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) })
-            .then(res => res.ok ? (alert("Başarılı!"), location.href='login.html') : alert("Hata!"));
+            .then(res => res.ok ? (alert("Basarili!"), location.href='login.html') : alert("Hata!"));
         }
     </script>
 </body>
