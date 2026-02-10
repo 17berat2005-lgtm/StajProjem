@@ -43,7 +43,7 @@ public class AuthController : ControllerBase
     [HttpPut("users/{id}/role")]
     public async Task<IActionResult> UpdateUserRole(int id, [FromBody] UpdateRoleRequest request)
     {
-        var user = await _context.Users.FindAsync(id);
+        var user = await _context.Users.FindAsync(id);//dfgdfggfdgd
         if (user == null) return NotFound(); // sgsdgsdgsdgdfgdfg
 
         user.Role = request.Role;
