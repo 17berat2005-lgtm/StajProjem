@@ -44,7 +44,7 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> UpdateUserRole(int id, [FromBody] UpdateRoleRequest request)
     {
         var user = await _context.Users.FindAsync(id);
-        if (user == null) return NotFound();
+        if (user == null) return NotFound(); // sgsdgsdgsdgdfgdfg
 
         user.Role = request.Role;
         await _context.SaveChangesAsync();
