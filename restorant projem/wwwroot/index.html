@@ -1,0 +1,613 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kanka Restoran | Management Panel</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <h2 id="main-title">🔥 Kanka Restoran</h2>
+        <div class="nav-actions">
+            <span id="user-display" style="color: white; margin-right: 15px;"></span>
+            <button onclick="openCart()" class="btn-cart" id="cart-btn">
+                🛒 Sepet (<span id="cart-count">0</span>)
+            </button>
+            <button onclick="openOrderHistory()" class="btn-cart" style="margin-right: 10px;">📋 Siparişlerim</button>
+            <button onclick="logout()" class="btn-logout">Logout</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="hero">
+            <h1 class="hero-title">Fine Dining • Kanka Restoran</h1>
+            <p class="hero-subtitle">Şefin özel menülerini yönet, restoranlarını ve kullanıcılarını tek panelden kontrol et.</p>
+        </div>
+
+        <div id="admin-area" class="admin-panel">
+            <div class="admin-tabs" id="admin-tabs">
+                <button class="admin-tab active" data-target="section-menu">🍔 Menü Yönetimi</button>
+                <button class="admin-tab" data-target="section-restaurants">🏨 Restoranlar</button>
+                <button class="admin-tab" data-target="section-users">👤 Kullanıcılar</button>
+                <button class="admin-tab" data-target="section-orders">📦 Siparişler</button>
+            </div>
+
+            <h3 id="form-title">➕ Yeni Menü Ürünü Ekle</h3>
+            <small>Sadece <b>Admin</b> kullanıcılar ürün ekleyebilir / güncelleyebilir.</small>
+            <div class="form-row">
+                <input type="text" id="yName" placeholder="Ürün adı">
+                <input type="text" id="yDesc" placeholder="Açıklama">
+                <input type="number" id="yPrice" placeholder="Fiyat (₺)">
+                <input type="number" id="yEnergy" placeholder="Kalori">
+                <button id="btn-action" onclick="handleAction()">SİSTEME KAYDET</button>
+            </div>
+        </div>
+
+        <section id="section-menu" class="section-visible">
+            <div class="search-container">
+                <input type="text" id="searchInput" class="search-input" onkeyup="filterMenu()" placeholder="🔍 Menüde ara...">
+            </div>
+
+            <h2 class="list-title">Menü Listesi</h2>
+            <div id="menu-listesi" class="menu-grid">Loading menu...</div>
+        </section>
+
+        <section id="section-restaurants" class="section-hidden">
+            <h2 class="list-title">Restoranlar</h2>
+            <div id="restaurant-list" class="menu-grid">
+                <p>Restoranlar yükleniyor...</p>
+            </div>
+        </section>
+
+        <section id="section-users" class="section-hidden">
+            <h2 class="list-title">Kullanıcılar</h2>
+            <div id="user-list" class="menu-grid">
+                <p>Kullanıcılar yükleniyor...</p>
+            </div>
+        </section>
+
+        <section id="section-orders" class="section-hidden">
+            <h2 class="list-title">Sipariş Yönetimi</h2>
+            <div id="order-list" class="menu-grid">
+                <p>Siparişler yükleniyor...</p>
+            </div>
+        </section>
+
+        <section id="section-order-history" class="section-hidden">
+            <h2 class="list-title">Sipariş Geçmişim</h2>
+            <div id="order-history-list" class="menu-grid">
+                <p>Siparişler yükleniyor...</p>
+            </div>
+        </section>
+    </div>
+
+    <div id="cart-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeCart()">&times;</span>
+            <h2>🛒 Sepetim</h2>
+            <div id="cart-items"></div>
+            <div class="cart-footer">
+                <div class="cart-total">
+                    <strong>Toplam: <span id="cart-total">0</span> TL</strong>
+                </div>
+                <button onclick="checkout()" class="btn-checkout">Sipariş Ver</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let updateId = null;
+        let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        let userId = parseInt(localStorage.getItem('userId') || '0');
+        const userRole = localStorage.getItem('userRole');
+        const userName = localStorage.getItem('userName');
+
+        // 🛡️ Yetki ve Güvenlik Kontrolü
+        if (!userRole) {
+            window.location.href = 'login.html';
+        }
+
+        // Başlık Yönetimi
+        document.getElementById('user-display').innerText = `Welcome, ${userName || 'User'}`;
+        const titleElement = document.getElementById('main-title');
+
+        if (userRole === 'Admin') {
+            titleElement.innerText = "🔥 Kanka Restoran (Admin Panel)";
+        } else {
+            titleElement.innerText = "🍔 Kanka Restoran (Menu)";
+            document.getElementById('admin-area').style.display = 'none';
+            document.getElementById('section-restaurants').style.display = 'none';
+            document.getElementById('section-users').style.display = 'none';
+        }
+
+        // Admin sekme tıklamaları
+        if (userRole === 'Admin') {
+            const tabs = document.querySelectorAll('.admin-tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+
+                    document.querySelectorAll('section[id^="section-"]').forEach(sec => {
+                        sec.classList.add('section-hidden');
+                        sec.classList.remove('section-visible');
+                    });
+
+                    const targetId = tab.getAttribute('data-target');
+                    const targetEl = document.getElementById(targetId);
+                    if (targetEl) {
+                        targetEl.classList.remove('section-hidden');
+                        targetEl.classList.add('section-visible');
+                    }
+                });
+            });
+        }
+
+        // 🚪 Logout
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }
+
+        // 📋 Menüyü Yükle (Yeni İngilizce Parametrelerle)
+        function loadMenu() {
+            fetch('/api/MenuDetail')
+                .then(res => {
+                    if (!res.ok) throw new Error("Network response was not ok");
+                    return res.json();
+                })
+                .then(data => {
+                    let html = '';
+                    if (data.length === 0) {
+                        html = '<p style="text-align:center;">No items found in menu.</p>';
+                    } else {
+                        data.forEach(item => {
+                            // Tarih formatlama
+                            let dateStr = item.createdDate ? new Date(item.createdDate).toLocaleDateString('tr-TR') : 'N/A';
+
+                            let buttons = userRole === 'Admin' ? `
+                                    <div class="btn-group">
+                                        <button class="btn-edit" onclick="setUpdateMode(${item.id}, '${item.foodName}', '${item.description}', ${item.price}, ${item.calories})">✏️ EDIT</button>
+                                        <button class="btn-del" onclick="deleteItem(${item.id})">🗑️ DELETE</button>
+                                    </div>` : `
+                                    <div class="btn-group">
+                                        <button class="btn-add-cart" onclick="addToCart(${item.id}, '${item.foodName}', ${item.price})">🛒 Sepete Ekle</button>
+                                    </div>`;
+
+                            html += `
+                                    <div class="card">
+                                        <h3>🍔 ${item.foodName}</h3>
+                                        <p>${item.description}</p>
+                                        <p class="price-text">💰 Price: ${item.price} TL</p>
+                                        <small>🔥 Energy: ${item.calories} kcal</small><br>
+                                        <small style="color: #888; font-size: 11px;">🗓️ Added: ${dateStr}</small>
+                                        ${buttons}
+                                    </div>`;
+                        });
+                    }
+                    document.getElementById('menu-listesi').innerHTML = html;
+                })
+                .catch(err => {
+                    document.getElementById('menu-listesi').innerHTML = `<p style="color:red;">Error loading menu: ${err.message}</p>`;
+                });
+        }
+
+        // 🔍 Arama Fonksiyonu (Dinamik Filtreleme)
+        function filterMenu() {
+            let input = document.getElementById('searchInput').value.toLowerCase();
+            let cards = document.getElementsByClassName('card');
+
+            for (let i = 0; i < cards.length; i++) {
+                let foodName = cards[i].getElementsByTagName('h3')[0].innerText.toLowerCase();
+                cards[i].style.display = foodName.includes(input) ? "" : "none";
+            }
+        }
+
+        // ✏️ Edit Mode
+        function setUpdateMode(id, name, desc, price, energy) {
+            updateId = id;
+            document.getElementById('yName').value = name;
+            document.getElementById('yDesc').value = desc;
+            document.getElementById('yPrice').value = price;
+            document.getElementById('yEnergy').value = energy;
+
+            document.getElementById('form-title').innerText = "✏️ Edit Item";
+            document.getElementById('btn-action').innerText = "UPDATE ITEM";
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // 💾 Save/Update
+        function handleAction() {
+            const payload = {
+                id: updateId || 0,
+                foodName: document.getElementById('yName').value,
+                description: document.getElementById('yDesc').value,
+                price: parseFloat(document.getElementById('yPrice').value),
+                calories: parseInt(document.getElementById('yEnergy').value),
+                isActive: true
+            };
+
+            const method = updateId ? 'PUT' : 'POST';
+            const url = updateId ? `/api/MenuDetail/${updateId}` : '/api/MenuDetail';
+
+            fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).then(() => {
+                updateId = null;
+                location.reload();
+            });
+        }
+
+        // 🗑️ Delete
+        function deleteItem(id) {
+            if (confirm("Are you sure you want to delete this item?")) {
+                fetch(`/api/MenuDetail/${id}`, { method: 'DELETE' })
+                    .then(() => location.reload());
+            }
+        }
+
+        // 🌐 Restoranları Yükle (Admin için)
+        function loadRestaurants() {
+            fetch('/api/Restaurant')
+                .then(res => res.ok ? res.json() : Promise.reject())
+                .then(data => {
+                    if (!Array.isArray(data) || data.length === 0) {
+                        document.getElementById('restaurant-list').innerHTML =
+                            '<p style="text-align:center;">Hiç restoran bulunamadı.</p>';
+                        return;
+                    }
+
+                    const html = data.map(r => `
+                            <div class="card">
+                                <h3>🏨 ${r.restaurantName}</h3>
+                                <p>${r.address || 'Adres bilgisi yok'}</p>
+                            </div>`).join('');
+
+                    document.getElementById('restaurant-list').innerHTML = html;
+                })
+                .catch(() => {
+                    document.getElementById('restaurant-list').innerHTML =
+                        '<p style="color:red; text-align:center;">Restoranlar yüklenirken hata oluştu.</p>';
+                });
+        }
+
+        // 👤 Kullanıcıları Yükle (Admin için)
+        function loadUsers() {
+            fetch('/api/Auth/users')
+                .then(res => res.ok ? res.json() : Promise.reject())
+                .then(data => {
+                    if (!Array.isArray(data) || data.length === 0) {
+                        document.getElementById('user-list').innerHTML =
+                            '<p style="text-align:center;">Hiç kullanıcı yok.</p>';
+                        return;
+                    }
+
+                    const html = data.map(u => `
+                            <div class="card">
+                                <h3>👤 ${u.username}</h3>
+                                <p>Mevcut rol: <strong>${u.role}</strong></p>
+                                <div style="margin-top:8px; display:flex; gap:6px; align-items:center;">
+                                    <select id="role-${u.id}">
+                                        <option value="User" ${u.role === 'User' ? 'selected' : ''}>User</option>
+                                        <option value="Admin" ${u.role === 'Admin' ? 'selected' : ''}>Admin</option>
+                                    </select>
+                                    <button class="btn-edit" style="flex:0 0 auto;" onclick="updateUserRole(${u.id})">Rolü Kaydet</button>
+                                </div>
+                                <small>Oluşturulma: ${u.createdDate ? new Date(u.createdDate).toLocaleDateString('tr-TR') : ''}</small>
+                            </div>`).join('');
+
+                    document.getElementById('user-list').innerHTML = html;
+                })
+                .catch(() => {
+                    document.getElementById('user-list').innerHTML =
+                        '<p style="color:red; text-align:center;">Kullanıcılar yüklenirken hata oluştu.</p>';
+                });
+        }
+
+        // Kullanıcının rolünü API üzerinden güncelle
+        function updateUserRole(id) {
+            const select = document.getElementById(`role-${id}`);
+            if (!select) return;
+
+            const newRole = select.value;
+
+            fetch(`/api/Auth/users/${id}/role`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ role: newRole })
+            })
+                .then(res => res.ok ? res.json() : Promise.reject())
+                .then(() => {
+                    alert('Rol güncellendi.');
+                    loadUsers();
+                })
+                .catch(() => alert('Rol güncellenirken hata oluştu.'));
+        }
+
+        // 🛒 SEPET İŞLEMLERİ
+        function updateCartCount() {
+            const total = cart.reduce((sum, item) => sum + item.quantity, 0);
+            document.getElementById('cart-count').textContent = total;
+            localStorage.setItem('cart', JSON.stringify(cart));
+        }
+
+        function addToCart(menuId, foodName, price) {
+            const existing = cart.find(item => item.menuDetailId === menuId);
+            if (existing) {
+                existing.quantity++;
+            } else {
+                cart.push({ menuDetailId: menuId, foodName, price, quantity: 1 });
+            }
+            updateCartCount();
+            alert(`${foodName} sepete eklendi!`);
+        }
+
+        function openCart() {
+            document.getElementById('cart-modal').style.display = 'block';
+            renderCart();
+        }
+
+        function closeCart() {
+            document.getElementById('cart-modal').style.display = 'none';
+        }
+
+        function renderCart() {
+            const cartItemsDiv = document.getElementById('cart-items');
+            if (cart.length === 0) {
+                cartItemsDiv.innerHTML = '<p style="text-align:center; padding:20px;">Sepetiniz boş.</p>';
+                document.getElementById('cart-total').textContent = '0';
+                return;
+            }
+
+            let html = '';
+            let total = 0;
+            cart.forEach((item, index) => {
+                const itemTotal = item.price * item.quantity;
+                total += itemTotal;
+                html += `
+                    <div class="cart-item">
+                        <div>
+                            <strong>${item.foodName}</strong>
+                            <p>${item.price} TL x ${item.quantity} = ${itemTotal.toFixed(2)} TL</p>
+                        </div>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <button onclick="changeQuantity(${index}, -1)" class="btn-qty">-</button>
+                            <span>${item.quantity}</span>
+                            <button onclick="changeQuantity(${index}, 1)" class="btn-qty">+</button>
+                            <button onclick="removeFromCart(${index})" class="btn-del" style="padding:5px 10px;">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            });
+            cartItemsDiv.innerHTML = html;
+            document.getElementById('cart-total').textContent = total.toFixed(2);
+        }
+
+        function changeQuantity(index, delta) {
+            cart[index].quantity += delta;
+            if (cart[index].quantity <= 0) {
+                cart.splice(index, 1);
+            }
+            updateCartCount();
+            renderCart();
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            updateCartCount();
+            renderCart();
+        }
+
+        function checkout() {
+            if (cart.length === 0) {
+                alert('Sepetiniz boş!');
+                return;
+            }
+
+            if (!userId || userId === 0) {
+                alert('Kullanıcı bilgisi bulunamadı. Lütfen tekrar giriş yapın.');
+                return;
+            }
+
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const notes = prompt('Sipariş notu eklemek ister misiniz? (Opsiyonel)') || '';
+
+            const orderData = {
+                userId: userId,
+                totalAmount: total,
+                notes: notes,
+                items: cart.map(item => ({
+                    menuDetailId: item.menuDetailId,
+                    quantity: item.quantity
+                }))
+            };
+
+            fetch('/api/Order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(orderData)
+            })
+                .then(res => res.ok ? res.json() : Promise.reject())
+                .then(() => {
+                    alert('Siparişiniz başarıyla oluşturuldu!');
+                    cart = [];
+                    updateCartCount();
+                    closeCart();
+                    if (document.getElementById('section-order-history').classList.contains('section-visible')) {
+                        loadOrderHistory();
+                    }
+                })
+                .catch(() => alert('Sipariş oluşturulurken hata oluştu.'));
+        }
+
+        // 📋 SİPARİŞ GEÇMİŞİ
+        function openOrderHistory() {
+            document.querySelectorAll('section[id^="section-"]').forEach(sec => {
+                sec.classList.add('section-hidden');
+                sec.classList.remove('section-visible');
+            });
+            document.getElementById('section-order-history').classList.remove('section-hidden');
+            document.getElementById('section-order-history').classList.add('section-visible');
+            loadOrderHistory();
+        }
+
+        function loadOrderHistory() {
+            if (!userId || userId === 0) {
+                document.getElementById('order-history-list').innerHTML = '<p>Kullanıcı bilgisi bulunamadı.</p>';
+                return;
+            }
+
+            fetch(`/api/Order/user/${userId}`)
+                .then(res => res.ok ? res.json() : Promise.reject())
+                .then(data => {
+                    if (!Array.isArray(data) || data.length === 0) {
+                        document.getElementById('order-history-list').innerHTML =
+                            '<p style="text-align:center;">Henüz siparişiniz yok.</p>';
+                        return;
+                    }
+
+                    const html = data.map(order => {
+                        const statusColors = {
+                            'Pending': '#f59e0b',
+                            'Confirmed': '#3b82f6',
+                            'Preparing': '#8b5cf6',
+                            'Ready': '#10b981',
+                            'Completed': '#059669',
+                            'Cancelled': '#ef4444'
+                        };
+                        const itemsHtml = order.items?.map(item => 
+                            `<li>${item.foodName} x${item.quantity} (${item.subTotal.toFixed(2)} TL)</li>`
+                        ).join('') || '';
+                        
+                        return `
+                            <div class="card">
+                                <h3>Sipariş #${order.id}</h3>
+                                <p><strong>Durum:</strong> <span style="color:${statusColors[order.status] || '#666'}; font-weight:bold;">${order.status}</span></p>
+                                <p><strong>Toplam:</strong> ${order.totalAmount.toFixed(2)} TL</p>
+                                <p><strong>Tarih:</strong> ${new Date(order.createdDate).toLocaleString('tr-TR')}</p>
+                                ${order.notes ? `<p><strong>Not:</strong> ${order.notes}</p>` : ''}
+                                <details style="margin-top:10px;">
+                                    <summary style="cursor:pointer; color:#3b82f6;">Ürünler</summary>
+                                    <ul style="margin-top:8px; padding-left:20px;">${itemsHtml}</ul>
+                                </details>
+                            </div>
+                        `;
+                    }).join('');
+
+                    document.getElementById('order-history-list').innerHTML = html;
+                })
+                .catch(() => {
+                    document.getElementById('order-history-list').innerHTML =
+                        '<p style="color:red; text-align:center;">Siparişler yüklenirken hata oluştu.</p>';
+                });
+        }
+
+        // 📦 ADMIN SİPARİŞ YÖNETİMİ
+        function loadOrders() {
+            fetch('/api/Order/admin/all')
+                .then(res => res.ok ? res.json() : Promise.reject())
+                .then(data => {
+                    if (!Array.isArray(data) || data.length === 0) {
+                        document.getElementById('order-list').innerHTML =
+                            '<p style="text-align:center;">Henüz sipariş yok.</p>';
+                        return;
+                    }
+
+                    const statusOptions = ['Pending', 'Confirmed', 'Preparing', 'Ready', 'Completed', 'Cancelled'];
+                    const statusColors = {
+                        'Pending': '#f59e0b',
+                        'Confirmed': '#3b82f6',
+                        'Preparing': '#8b5cf6',
+                        'Ready': '#10b981',
+                        'Completed': '#059669',
+                        'Cancelled': '#ef4444'
+                    };
+
+                    const html = data.map(order => {
+                        const itemsHtml = order.items?.map(item => 
+                            `<li>${item.foodName} x${item.quantity} (${item.subTotal.toFixed(2)} TL)</li>`
+                        ).join('') || '';
+
+                        return `
+                            <div class="card">
+                                <h3>Sipariş #${order.id} - ${order.userName || 'Bilinmeyen'}</h3>
+                                <p><strong>Durum:</strong> 
+                                    <select id="status-${order.id}" onchange="updateOrderStatus(${order.id})" style="margin-left:8px; padding:4px 8px; border-radius:6px;">
+                                        ${statusOptions.map(s => `<option value="${s}" ${order.status === s ? 'selected' : ''}>${s}</option>`).join('')}
+                                    </select>
+                                </p>
+                                <p><strong>Toplam:</strong> ${order.totalAmount.toFixed(2)} TL</p>
+                                <p><strong>Tarih:</strong> ${new Date(order.createdDate).toLocaleString('tr-TR')}</p>
+                                ${order.notes ? `<p><strong>Not:</strong> ${order.notes}</p>` : ''}
+                                <details style="margin-top:10px;">
+                                    <summary style="cursor:pointer; color:#3b82f6;">Ürünler</summary>
+                                    <ul style="margin-top:8px; padding-left:20px;">${itemsHtml}</ul>
+                                </details>
+                                <button onclick="cancelOrder(${order.id})" class="btn-del" style="margin-top:10px; width:100%;">Siparişi İptal Et</button>
+                            </div>
+                        `;
+                    }).join('');
+
+                    document.getElementById('order-list').innerHTML = html;
+                })
+                .catch(() => {
+                    document.getElementById('order-list').innerHTML =
+                        '<p style="color:red; text-align:center;">Siparişler yüklenirken hata oluştu.</p>';
+                });
+        }
+
+        function updateOrderStatus(orderId) {
+            const select = document.getElementById(`status-${orderId}`);
+            if (!select) return;
+
+            fetch(`/api/Order/${orderId}/status`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: select.value })
+            })
+                .then(res => res.ok ? res.json() : Promise.reject())
+                .then(() => {
+                    alert('Sipariş durumu güncellendi.');
+                    loadOrders();
+                })
+                .catch(() => alert('Durum güncellenirken hata oluştu.'));
+        }
+
+        function cancelOrder(orderId) {
+            if (!confirm('Bu siparişi iptal etmek istediğinize emin misiniz?')) return;
+
+            fetch(`/api/Order/${orderId}`, { method: 'DELETE' })
+                .then(res => res.ok ? res.json() : Promise.reject())
+                .then(() => {
+                    alert('Sipariş iptal edildi.');
+                    loadOrders();
+                })
+                .catch(() => alert('Sipariş iptal edilirken hata oluştu.'));
+        }
+
+        // Modal dışına tıklanınca kapat
+        window.onclick = function(event) {
+            const modal = document.getElementById('cart-modal');
+            if (event.target === modal) {
+                closeCart();
+            }
+        }
+
+        // İlk yükleme
+        updateCartCount();
+        loadMenu();
+        if (userRole === 'Admin') {
+            loadRestaurants();
+            loadUsers();
+            // Admin sipariş sekmesine tıklandığında yükle
+            document.querySelector('[data-target="section-orders"]')?.addEventListener('click', () => {
+                setTimeout(loadOrders, 100);
+            });
+        }
+    </script>
+</body>
+</html>

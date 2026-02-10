@@ -1,0 +1,6 @@
+@restorant_projem_HostAddress = http://localhost:5128
+
+GET {{restorant_projem_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
