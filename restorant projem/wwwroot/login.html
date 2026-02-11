@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Kanka Restoran | Giris</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="login-body">
     <div class="login-overlay">
@@ -11,6 +11,10 @@
             <div class="login-logo">
                 <span class="logo-icon">::</span>
                 <span class="logo-text">Kanka Restoran</span>
+                <select id="lang-select" class="lang-select login-lang-select">
+                    <option value="tr">TR</option>
+                    <option value="en">EN</option>
+                </select>
             </div>
             <h3>Hos geldin kanka!</h3>
             <small>Lutfen kullanici adi ve sifrenle panele giris yap.</small>
@@ -27,20 +31,69 @@
         </div>
     </div>
     <script>
+        const LANG_KEY = 'appLang';
+        const DEFAULT_LANG = 'tr';
+        const SUPPORTED_LANGS = ['tr', 'en'];
+
+        function getLang() {
+            const saved = localStorage.getItem(LANG_KEY);
+            return SUPPORTED_LANGS.includes(saved) ? saved : DEFAULT_LANG;
+        }
+
+        function setLang(lang) {
+            if (SUPPORTED_LANGS.includes(lang)) {
+                localStorage.setItem(LANG_KEY, lang);
+            }
+        }
+
+        const LOGIN_MESSAGES = {
+            tr: {
+                invalidCredentials: "Hatali giris kanka!"
+            },
+            en: {
+                invalidCredentials: "Wrong username or password!"
+            }
+        };
+
+        function tLogin(key) {
+            const lang = getLang();
+            return (LOGIN_MESSAGES[lang] && LOGIN_MESSAGES[lang][key]) ||
+                   (LOGIN_MESSAGES[DEFAULT_LANG] && LOGIN_MESSAGES[DEFAULT_LANG][key]) ||
+                   key;
+        }
+
+        function onLangChange(select) {
+            setLang(select.value);
+            location.reload();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const select = document.getElementById('lang-select');
+            if (select) {
+                select.value = getLang();
+                select.addEventListener('change', () => onLangChange(select));
+            }
+        });
+
         function login() {
-            const data = { username: document.getElementById('user').value, password: document.getElementById('pass').value };
+            const data = {
+                username: document.getElementById('user').value,
+                password: document.getElementById('pass').value
+            };
+
             fetch('/api/Auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             })
-                .then(res => res.ok ? res.json() : Promise.reject())
-                .then(user => {
-                    localStorage.setItem('userRole', user.role);
-                    localStorage.setItem('userName', user.username);
-                    localStorage.setItem('userId', user.id || user.ID);
-                    window.location.href = 'index.html';
-                }).catch(() => alert("Hatali giris kanka!"));
+            .then(res => res.ok ? res.json() : Promise.reject())
+            .then(user => {
+                localStorage.setItem('userRole', user.role);
+                localStorage.setItem('userName', user.username);
+                localStorage.setItem('userId', user.id || user.ID);
+                window.location.href = 'index.html';
+            })
+            .catch(() => alert(tLogin('invalidCredentials')));
         }
     </script>
 </body>

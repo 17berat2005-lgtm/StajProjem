@@ -1,4 +1,4 @@
-﻿namespace restorant_projem;
+namespace restorant_projem.Models;
 
 public class User
 {
@@ -8,3 +8,12 @@ public class User
     public string Role { get; set; } = string.Empty;
     public DateTime CreatedDate { get; set; } = DateTime.Now;
 }
+
+
+
+
+
+
+
+
+

@@ -1,4 +1,4 @@
-﻿* {
+* {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -60,6 +60,15 @@ body {
 .login-form-column {
     flex-direction: column;
     margin-top: 18px;
+}
+
+.lang-select {
+    padding: 4px 6px;
+    border-radius: 6px;
+}
+
+.login-lang-select {
+    margin-left: auto;
 }
 
 .btn-login {
@@ -127,6 +136,15 @@ body {
     gap: 10px;
 }
 
+#header-lang-select {
+    margin-right: 10px;
+}
+
+#user-display {
+    color: white;
+    margin-right: 15px;
+}
+
 .btn-logout {
     background: #e74c3c;
     color: white;
@@ -149,6 +167,37 @@ body {
     padding: 32px 20px 48px;
     max-width: 1200px;
     margin: 0 auto;
+}
+
+/* Register sayfasi */
+.register-body {
+    background: radial-gradient(circle at top left,#ffb347,#ffcc33,#f4f7f6);
+    font-family: sans-serif;
+    text-align: center;
+    padding-top: 100px;
+}
+
+.register-panel {
+    max-width: 360px;
+    margin: 0 auto;
+    border-left-color: #10b981;
+}
+
+.register-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.register-form-column {
+    margin-top: 18px;
+    flex-direction: column;
+}
+
+.register-back-link {
+    display: block;
+    margin-top: 15px;
+    color: #1f2933;
 }
 
 /* Hero alani */
@@ -403,6 +452,10 @@ input:focus, select:focus {
     margin-right: 10px;
 }
 
+.btn-order-history {
+    margin-right: 10px;
+}
+
 .btn-cart:hover {
     background: #d97706;
     transform: translateY(-1px);
@@ -550,3 +603,4 @@ input:focus, select:focus {
         margin: 10% auto;
     }
 }
+

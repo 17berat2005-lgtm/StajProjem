@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace restorant_projem.Models
 {
@@ -13,3 +13,12 @@ namespace restorant_projem.Models
         public DateTime CreatedDate { get; set; } = DateTime.Now;
     }
 }
+
+
+
+
+
+
+
+
+

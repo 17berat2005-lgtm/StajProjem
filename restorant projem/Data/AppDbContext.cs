@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using restorant_projem.Models;
 using restorant_projem;
 
@@ -16,3 +16,12 @@ namespace restorant_projem.Data
         public DbSet<OrderItem> OrderItems { get; set; }
     }
 }
+
+
+
+
+
+
+
+
+

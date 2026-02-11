@@ -4,18 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kanka Restoran | Management Panel</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
     <nav class="navbar">
         <h2 id="main-title">Kanka Restoran</h2>
         <div class="nav-actions">
-            <span id="user-display" style="color: white; margin-right: 15px;"></span>
+            <select id="lang-select" class="lang-select" onchange="changeLanguage(this.value)">
+                <option value="tr">TR</option>
+                <option value="en">EN</option>
+            </select>
+            <span id="user-display"></span>
             <button onclick="openCart()" class="btn-cart" id="cart-btn">
                 Sepet (<span id="cart-count">0</span>)
             </button>
-            <button onclick="openOrderHistory()" class="btn-cart" style="margin-right: 10px;">Siparislerim</button>
+            <button onclick="openOrderHistory()" class="btn-cart btn-order-history">Siparislerim</button>
             <button onclick="logout()" class="btn-logout">Logout</button>
         </div>
     </nav>
@@ -98,6 +102,95 @@
     </div>
 
     <script>
+        const LANG_KEY = 'appLang';
+        const DEFAULT_LANG = 'tr';
+        const SUPPORTED_LANGS = ['tr', 'en'];
+
+        function getLang() {
+            const saved = localStorage.getItem(LANG_KEY);
+            return SUPPORTED_LANGS.includes(saved) ? saved : DEFAULT_LANG;
+        }
+
+        function setLang(lang) {
+            if (SUPPORTED_LANGS.includes(lang)) {
+                localStorage.setItem(LANG_KEY, lang);
+            }
+        }
+
+        function changeLanguage(lang) {
+            setLang(lang);
+            location.reload();
+        }
+
+        const UI_TEXT = {
+            tr: {
+                loadingMenu: "Menu yukleniyor...",
+                noMenuItems: "Menude hic urun bulunamadi.",
+                menuLoadError: "Menu yuklenirken hata olustu",
+                noRestaurants: "Hic restoran bulunamadi.",
+                restaurantsLoadError: "Restoranlar yuklenirken hata olustu.",
+                onlySuperAdminUsers: "Bu alani sadece SuperAdmin gorebilir.",
+                noUsers: "Hic kullanici yok.",
+                usersLoadError: "Kullanicilar yuklenirken hata olustu.",
+                roleUpdated: "Rol guncellendi.",
+                roleUpdateError: "Rol guncellenirken hata olustu.",
+                itemAddedToCart: "sepete eklendi!",
+                emptyCart: "Sepetiniz bos.",
+                emptyCartAlert: "Sepetiniz bos!",
+                userNotFound: "Kullanici bilgisi bulunamadi.",
+                userNotFoundAlert: "Kullanici bilgisi bulunamadi. Lutfen tekrar giris yapin.",
+                orderNotePrompt: "Siparis notu eklemek ister misiniz? (Opsiyonel)",
+                orderSuccess: "Siparisiniz basariyla olusturuldu!",
+                orderError: "Siparis olusturulurken hata olustu.",
+                noOrdersYet: "Henuz siparisiniz yok.",
+                ordersLoadError: "Siparisler yuklenirken hata olustu.",
+                ordersAdminEmpty: "Henuz siparis yok.",
+                orderStatusUpdated: "Siparis durumu guncellendi.",
+                orderStatusError: "Durum guncellenirken hata olustu.",
+                cancelOrderConfirm: "Bu siparisi iptal etmek istediginize emin misiniz?",
+                orderCancelled: "Siparis iptal edildi.",
+                orderCancelError: "Siparis iptal edilirken hata olustu.",
+                welcomePrefix: "Welcome,",
+                welcomeFallbackUser: "User"
+            },
+            en: {
+                loadingMenu: "Loading menu...",
+                noMenuItems: "No items found in menu.",
+                menuLoadError: "Error loading menu",
+                noRestaurants: "No restaurants found.",
+                restaurantsLoadError: "Error while loading restaurants.",
+                onlySuperAdminUsers: "Only SuperAdmin can see this area.",
+                noUsers: "No users found.",
+                usersLoadError: "Error while loading users.",
+                roleUpdated: "Role updated.",
+                roleUpdateError: "Error while updating role.",
+                itemAddedToCart: "added to cart!",
+                emptyCart: "Your cart is empty.",
+                emptyCartAlert: "Your cart is empty!",
+                userNotFound: "User information not found.",
+                userNotFoundAlert: "User information not found. Please login again.",
+                orderNotePrompt: "Would you like to add an order note? (Optional)",
+                orderSuccess: "Your order has been created successfully!",
+                orderError: "An error occurred while creating the order.",
+                noOrdersYet: "You do not have any orders yet.",
+                ordersLoadError: "Error while loading orders.",
+                ordersAdminEmpty: "No orders yet.",
+                orderStatusUpdated: "Order status updated.",
+                orderStatusError: "Error while updating status.",
+                cancelOrderConfirm: "Are you sure you want to cancel this order?",
+                orderCancelled: "Order has been cancelled.",
+                orderCancelError: "Error while cancelling order.",
+                welcomePrefix: "Welcome,",
+                welcomeFallbackUser: "User"
+            }
+        };
+
+        function t(key) {
+            const lang = getLang();
+            return (UI_TEXT[lang] && UI_TEXT[lang][key]) ||
+                   (UI_TEXT[DEFAULT_LANG] && UI_TEXT[DEFAULT_LANG][key]) ||
+                   key;
+        }
         let updateId = null;
         let cart = JSON.parse(localStorage.getItem('cart') || '[]');
         let userId = parseInt(localStorage.getItem('userId') || '0');
@@ -110,7 +203,14 @@
             window.location.href = 'login.html';
         }
 
-        document.getElementById('user-display').innerText = `Welcome, ${userName || 'User'}`;
+        const currentLang = getLang();
+        const langSelect = document.getElementById('lang-select');
+        if (langSelect) {
+            langSelect.value = currentLang;
+        }
+
+        document.getElementById('user-display').innerText =
+            `${t('welcomePrefix')} ${userName || t('welcomeFallbackUser')}`;
         const titleElement = document.getElementById('main-title');
 
         if (isAdmin) {
@@ -166,7 +266,7 @@
                 .then(data => {
                     let html = '';
                     if (data.length === 0) {
-                        html = '<p style="text-align:center;">No items found in menu.</p>';
+                        html = `<p style="text-align:center;">${t('noMenuItems')}</p>`;
                     } else {
                         data.forEach(item => {
                             let dateStr = item.createdDate ? new Date(item.createdDate).toLocaleDateString('tr-TR') : 'N/A';
@@ -194,7 +294,8 @@
                     document.getElementById('menu-listesi').innerHTML = html;
                 })
                 .catch(err => {
-                    document.getElementById('menu-listesi').innerHTML = `<p style="color:red;">Error loading menu: ${err.message}</p>`;
+                    document.getElementById('menu-listesi').innerHTML =
+                        `<p style="color:red;">${t('menuLoadError')}: ${err.message}</p>`;
                 });
         }
 
@@ -256,7 +357,7 @@
                 .then(data => {
                     if (!Array.isArray(data) || data.length === 0) {
                         document.getElementById('restaurant-list').innerHTML =
-                            '<p style="text-align:center;">Hic restoran bulunamadi.</p>';
+                            `<p style="text-align:center;">${t('noRestaurants')}</p>`;
                         return;
                     }
 
@@ -270,14 +371,14 @@
                 })
                 .catch(() => {
                     document.getElementById('restaurant-list').innerHTML =
-                        '<p style="color:red; text-align:center;">Restoranlar yuklenirken hata olustu.</p>';
+                        `<p style="color:red; text-align:center;">${t('restaurantsLoadError')}</p>`;
                 });
         }
 
         function loadUsers() {
             if (!isSuperAdmin) {
                 document.getElementById('user-list').innerHTML =
-                    '<p style="text-align:center;">Bu alani sadece SuperAdmin gorebilir.</p>';
+                    `<p style="text-align:center;">${t('onlySuperAdminUsers')}</p>`;
                 return;
             }
             fetch('/api/Auth/users')
@@ -285,7 +386,7 @@
                 .then(data => {
                     if (!Array.isArray(data) || data.length === 0) {
                         document.getElementById('user-list').innerHTML =
-                            '<p style="text-align:center;">Hic kullanici yok.</p>';
+                            `<p style="text-align:center;">${t('noUsers')}</p>`;
                         return;
                     }
 
@@ -308,7 +409,7 @@
                 })
                 .catch(() => {
                     document.getElementById('user-list').innerHTML =
-                        '<p style="color:red; text-align:center;">Kullanicilar yuklenirken hata olustu.</p>';
+                        `<p style="color:red; text-align:center;">${t('usersLoadError')}</p>`;
                 });
         }
 
@@ -325,10 +426,10 @@
             })
                 .then(res => res.ok ? res.json() : Promise.reject())
                 .then(() => {
-                    alert('Rol guncellendi.');
+                    alert(t('roleUpdated'));
                     loadUsers();
                 })
-                .catch(() => alert('Rol guncellenirken hata olustu.'));
+                .catch(() => alert(t('roleUpdateError')));
         }
 
         function updateCartCount() {
@@ -345,7 +446,7 @@
                 cart.push({ menuDetailId: menuId, foodName, price, quantity: 1 });
             }
             updateCartCount();
-            alert(`${foodName} sepete eklendi!`);
+            alert(`${foodName} ${t('itemAddedToCart')}`);
         }
 
         function openCart() {
@@ -360,7 +461,7 @@
         function renderCart() {
             const cartItemsDiv = document.getElementById('cart-items');
             if (cart.length === 0) {
-                cartItemsDiv.innerHTML = '<p style="text-align:center; padding:20px;">Sepetiniz bos.</p>';
+                cartItemsDiv.innerHTML = `<p style="text-align:center; padding:20px;">${t('emptyCart')}</p>`;
                 document.getElementById('cart-total').textContent = '0';
                 return;
             }
@@ -406,17 +507,17 @@
 
         function checkout() {
             if (cart.length === 0) {
-                alert('Sepetiniz bos!');
+                alert(t('emptyCartAlert'));
                 return;
             }
 
             if (!userId || userId === 0) {
-                alert('Kullanici bilgisi bulunamadi. Lutfen tekrar giris yapin.');
+                alert(t('userNotFoundAlert'));
                 return;
             }
 
             const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            const notes = prompt('Siparis notu eklemek ister misiniz? (Opsiyonel)') || '';
+            const notes = prompt(t('orderNotePrompt')) || '';
 
             const orderData = {
                 userId: userId,
@@ -435,7 +536,7 @@
             })
                 .then(res => res.ok ? res.json() : Promise.reject())
                 .then(() => {
-                    alert('Siparisiniz basariyla olusturuldu!');
+                    alert(t('orderSuccess'));
                     cart = [];
                     updateCartCount();
                     closeCart();
@@ -443,7 +544,7 @@
                         loadOrderHistory();
                     }
                 })
-                .catch(() => alert('Siparis olusturulurken hata olustu.'));
+                .catch(() => alert(t('orderError')));
         }
 
         function openOrderHistory() {
@@ -458,7 +559,8 @@
 
         function loadOrderHistory() {
             if (!userId || userId === 0) {
-                document.getElementById('order-history-list').innerHTML = '<p>Kullanici bilgisi bulunamadi.</p>';
+                document.getElementById('order-history-list').innerHTML =
+                    `<p>${t('userNotFound')}</p>`;
                 return;
             }
 
@@ -467,7 +569,7 @@
                 .then(data => {
                     if (!Array.isArray(data) || data.length === 0) {
                         document.getElementById('order-history-list').innerHTML =
-                            '<p style="text-align:center;">Henuz siparisiniz yok.</p>';
+                            `<p style="text-align:center;">${t('noOrdersYet')}</p>`;
                         return;
                     }
 
@@ -503,7 +605,7 @@
                 })
                 .catch(() => {
                     document.getElementById('order-history-list').innerHTML =
-                        '<p style="color:red; text-align:center;">Siparisler yuklenirken hata olustu.</p>';
+                        `<p style="color:red; text-align:center;">${t('ordersLoadError')}</p>`;
                 });
         }
 
@@ -513,7 +615,7 @@
                 .then(data => {
                     if (!Array.isArray(data) || data.length === 0) {
                         document.getElementById('order-list').innerHTML =
-                            '<p style="text-align:center;">Henuz siparis yok.</p>';
+                            `<p style="text-align:center;">${t('ordersAdminEmpty')}</p>`;
                         return;
                     }
 
@@ -556,7 +658,7 @@
                 })
                 .catch(() => {
                     document.getElementById('order-list').innerHTML =
-                        '<p style="color:red; text-align:center;">Siparisler yuklenirken hata olustu.</p>';
+                        `<p style="color:red; text-align:center;">${t('ordersLoadError')}</p>`;
                 });
         }
 
@@ -571,22 +673,22 @@
             })
                 .then(res => res.ok ? res.json() : Promise.reject())
                 .then(() => {
-                    alert('Siparis durumu guncellendi.');
+                    alert(t('orderStatusUpdated'));
                     loadOrders();
                 })
-                .catch(() => alert('Durum guncellenirken hata olustu.'));
+                .catch(() => alert(t('orderStatusError')));
         }
 
         function cancelOrder(orderId) {
-            if (!confirm('Bu siparisi iptal etmek istediginize emin misiniz?')) return;
+            if (!confirm(t('cancelOrderConfirm'))) return;
 
             fetch(`/api/Order/${orderId}`, { method: 'DELETE' })
                 .then(res => res.ok ? res.json() : Promise.reject())
                 .then(() => {
-                    alert('Siparis iptal edildi.');
+                    alert(t('orderCancelled'));
                     loadOrders();
                 })
-                .catch(() => alert('Siparis iptal edilirken hata olustu.'));
+                .catch(() => alert(t('orderCancelError')));
         }
 
         window.onclick = function(event) {
@@ -598,7 +700,8 @@
 
         updateCartCount();
         loadMenu();
-        if (userRole === 'Admin') {
+        // Admin ve SuperAdmin icin yonetim verilerini yukle
+        if (isAdmin) {
             loadRestaurants();
             loadUsers();
             document.querySelector('[data-target="section-orders"]')?.addEventListener('click', () => {

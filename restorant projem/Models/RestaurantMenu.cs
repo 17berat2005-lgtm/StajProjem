@@ -1,7 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace restorant_projem;
+namespace restorant_projem.Models;
 
 [Table("RestaurantMenu")]
 public class RestaurantMenu
@@ -15,3 +15,12 @@ public class RestaurantMenu
     [ForeignKey("RestaurantID")]
     public virtual Restaurant? Restaurant { get; set; }
 }
+
+
+
+
+
+
+
+
+

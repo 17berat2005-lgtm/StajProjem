@@ -3,23 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <title>Kayit Ol</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
-<body style="background:radial-gradient(circle at top left,#ffb347,#ffcc33,#f4f7f6); font-family:sans-serif; text-align:center; padding-top:100px;">
-    <div class="admin-panel" style="max-width:360px;margin:0 auto;border-left-color:#10b981;">
-        <h2>Kayit Ol</h2>
-        <div class="form-row" style="margin-top:18px;flex-direction:column;">
+<body class="register-body">
+    <div class="admin-panel register-panel">
+        <div class="register-header">
+            <h2>Kayit Ol</h2>
+            <select id="lang-select" class="lang-select">
+                <option value="tr">TR</option>
+                <option value="en">EN</option>
+            </select>
+        </div>
+        <div class="form-row register-form-column">
             <input type="text" id="rUser" placeholder="Kullanici Adi">
             <input type="password" id="rPass" placeholder="Sifre">
             <button onclick="kayit()" id="btn-register">HESAP OLUSTUR</button>
         </div>
-        <a href="login.html" style="display:block;margin-top:15px;color:#1f2933;">Giris Yap</a>
+        <a href="login.html" class="register-back-link">Giris Yap</a>
     </div>
     <script>
+        const LANG_KEY = 'appLang';
+        const DEFAULT_LANG = 'tr';
+        const SUPPORTED_LANGS = ['tr', 'en'];
+
+        function getLang() {
+            const saved = localStorage.getItem(LANG_KEY);
+            return SUPPORTED_LANGS.includes(saved) ? saved : DEFAULT_LANG;
+        }
+
+        function setLang(lang) {
+            if (SUPPORTED_LANGS.includes(lang)) {
+                localStorage.setItem(LANG_KEY, lang);
+            }
+        }
+
+        const REGISTER_MESSAGES = {
+            tr: {
+                success: "Basarili!",
+                error: "Hata!"
+            },
+            en: {
+                success: "Registration successful!",
+                error: "An error occurred!"
+            }
+        };
+
+        function tRegister(key) {
+            const lang = getLang();
+            return (REGISTER_MESSAGES[lang] && REGISTER_MESSAGES[lang][key]) ||
+                   (REGISTER_MESSAGES[DEFAULT_LANG] && REGISTER_MESSAGES[DEFAULT_LANG][key]) ||
+                   key;
+        }
+
+        function onLangChange(select) {
+            setLang(select.value);
+            location.reload();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const select = document.getElementById('lang-select');
+            if (select) {
+                select.value = getLang();
+                select.addEventListener('change', () => onLangChange(select));
+            }
+        });
+
         function kayit() {
-            const data = { username: document.getElementById('rUser').value, password: document.getElementById('rPass').value };
-            fetch('/api/Auth/register', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) })
-            .then(res => res.ok ? (alert("Basarili!"), location.href='login.html') : alert("Hata!"));
+            const data = {
+                username: document.getElementById('rUser').value,
+                password: document.getElementById('rPass').value
+            };
+
+            fetch('/api/Auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(res => {
+                if (res.ok) {
+                    alert(tRegister('success'));
+                    location.href = 'login.html';
+                } else {
+                    alert(tRegister('error'));
+                }
+            });
         }
     </script>
 </body>

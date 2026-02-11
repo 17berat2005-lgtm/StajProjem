@@ -1,8 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using restorant_projem.Models;
 
-namespace restorant_projem;
+namespace restorant_projem.Models;
 
 [Table("OrderItems")]
 public class OrderItem
@@ -26,4 +25,12 @@ public class OrderItem
     
     public decimal SubTotal { get; set; }
 }
+
+
+
+
+
+
+
+
 

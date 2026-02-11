@@ -1,7 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace restorant_projem;
+namespace restorant_projem.Models;
 
 [Table("Restaurant")]
 public class Restaurant
@@ -12,3 +12,12 @@ public class Restaurant
     public string? Address { get; set; }
     public virtual ICollection<RestaurantMenu>? Menus { get; set; }
 }
+
+
+
+
+
+
+
+
+

@@ -1,7 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using restorant_projem.Models;
 
-namespace restorant_projem;
+namespace restorant_projem.Models;
 
 [Table("Orders")]
 public class Order
@@ -24,6 +25,11 @@ public class Order
     
     public virtual ICollection<OrderItem>? OrderItems { get; set; }
 }
+
+
+
+
+
 
 
 
