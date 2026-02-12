@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace restorant_projem.Models
 {
@@ -11,8 +12,15 @@ namespace restorant_projem.Models
         public int Calories { get; set; }
         public bool IsActive { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
+
+        public int? CategoryId { get; set; }
+
+        [ForeignKey("CategoryId")]
+        public virtual Category? Category { get; set; }
     }
 }
+
+
 
 
 

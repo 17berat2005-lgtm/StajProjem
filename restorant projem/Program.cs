@@ -30,6 +30,35 @@ using (var scope = app.Services.CreateScope())
         {
         }
 
+        var createCategoriesSql = @"
+IF OBJECT_ID(N'[dbo].[Categories]', N'U') IS NULL
+BEGIN
+    CREATE TABLE [dbo].[Categories](
+        [Id] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        [Name] NVARCHAR(100) NOT NULL
+    );
+END
+
+IF COL_LENGTH('MenuDetails', 'CategoryId') IS NULL
+BEGIN
+    ALTER TABLE [dbo].[MenuDetails]
+    ADD [CategoryId] INT NULL;
+
+    ALTER TABLE [dbo].[MenuDetails] WITH CHECK ADD CONSTRAINT [FK_MenuDetails_Categories_CategoryId]
+    FOREIGN KEY([CategoryId]) REFERENCES [dbo].[Categories]([Id]) ON DELETE SET NULL;
+
+    CREATE INDEX [IX_MenuDetails_CategoryId] ON [dbo].[MenuDetails]([CategoryId]);
+END
+";
+
+        try
+        {
+            context.Database.ExecuteSqlRaw(createCategoriesSql);
+        }
+        catch
+        {
+        }
+
         var createOrdersSql = @"
 IF OBJECT_ID(N'[dbo].[Orders]', N'U') IS NULL
 BEGIN
@@ -93,9 +122,31 @@ END
         }
 
         var now = DateTime.Now;
-        var seedMenu = new List<MenuDetail>
+
+        var seedCategories = new[]
         {
-            new MenuDetail
+            "Ana Yemek",
+            "Tatli",
+            "Icecek",
+            "Baslangic",
+            "Salata"
+        };
+
+        foreach (var catName in seedCategories)
+        {
+            if (!context.Categories.Any(c => c.Name == catName))
+            {
+                context.Categories.Add(new Category { Name = catName });
+            }
+        }
+
+        context.SaveChanges();
+
+        var categories = context.Categories.ToList();
+
+        var seedMenu = new List<(MenuDetail Item, string CategoryName)>
+        {
+            (new MenuDetail
             {
                 FoodName = "Kanka Burger",
                 Description = "Cheddar peynirli, karamelize soganli, ozel soslu gurme burger.",
@@ -103,8 +154,8 @@ END
                 Calories = 850,
                 IsActive = true,
                 CreatedDate = now
-            },
-            new MenuDetail
+            }, "Ana Yemek"),
+            (new MenuDetail
             {
                 FoodName = "Izgara Bonfile",
                 Description = "Izgara sebzeler ve roka salatasi ile servis edilen dana bonfile.",
@@ -112,8 +163,8 @@ END
                 Calories = 720,
                 IsActive = true,
                 CreatedDate = now
-            },
-            new MenuDetail
+            }, "Ana Yemek"),
+            (new MenuDetail
             {
                 FoodName = "Truffle Makarna",
                 Description = "Krema soslu, mantarli ve truffle yagli taze feslegenli makarna.",
@@ -121,8 +172,8 @@ END
                 Calories = 680,
                 IsActive = true,
                 CreatedDate = now
-            },
-            new MenuDetail
+            }, "Ana Yemek"),
+            (new MenuDetail
             {
                 FoodName = "Fit Tavuk Bowl",
                 Description = "Izgara tavuk, kinoali yesil salata ve avokado ile hafif bowl.",
@@ -130,8 +181,8 @@ END
                 Calories = 540,
                 IsActive = true,
                 CreatedDate = now
-            },
-            new MenuDetail
+            }, "Salata"),
+            (new MenuDetail
             {
                 FoodName = "Cheesecake",
                 Description = "Cilek soslu New York usulu cheesecake.",
@@ -139,14 +190,20 @@ END
                 Calories = 430,
                 IsActive = true,
                 CreatedDate = now
-            }
+            }, "Tatli")
         };
 
         var addedAny = false;
-        foreach (var item in seedMenu)
+        foreach (var (item, categoryName) in seedMenu)
         {
             if (!context.MenuDetails.Any(m => m.FoodName == item.FoodName))
             {
+                var category = categories.FirstOrDefault(c => c.Name == categoryName);
+                if (category != null)
+                {
+                    item.CategoryId = category.Id;
+                }
+
                 context.MenuDetails.Add(item);
                 addedAny = true;
             }

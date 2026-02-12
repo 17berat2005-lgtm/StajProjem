@@ -45,13 +45,22 @@
                 <input type="text" id="yDesc" placeholder="Aciklama">
                 <input type="number" id="yPrice" placeholder="Fiyat (TL)">
                 <input type="number" id="yEnergy" placeholder="Kalori">
+                <select id="yCategory" class="category-select">
+                    <option value="">Kategori seciniz</option>
+                </select>
                 <button id="btn-action" onclick="handleAction()">SISTEME KAYDET</button>
             </div>
         </div>
 
         <section id="section-menu" class="section-visible">
             <div class="search-container">
-            <input type="text" id="searchInput" class="search-input" onkeyup="filterMenu()" placeholder="Menude ara...">
+                <input type="text" id="searchInput" class="search-input" onkeyup="filterMenu()" placeholder="Menude ara...">
+            </div>
+
+            <div class="category-filter-wrapper">
+                <select id="categoryFilter" class="category-filter" onchange="applyFilters()">
+                    <option value="all">Tüm Kategoriler</option>
+                </select>
             </div>
 
             <h2 class="list-title">Menu Listesi</h2>
@@ -194,6 +203,13 @@
         let updateId = null;
         let cart = JSON.parse(localStorage.getItem('cart') || '[]');
         let userId = parseInt(localStorage.getItem('userId') || '0');
+        let categories = [];
+        let menuData = [];
+        const menuImages = [
+            '/images/images.jpg',
+            '/images/indir.jpg',
+            '/images/indir (1).jpg'
+        ];
         const userRole = localStorage.getItem('userRole');
         const isAdmin = userRole === 'Admin' || userRole === 'SuperAdmin';
         const isSuperAdmin = userRole === 'SuperAdmin';
@@ -264,34 +280,8 @@
                     return res.json();
                 })
                 .then(data => {
-                    let html = '';
-                    if (data.length === 0) {
-                        html = `<p style="text-align:center;">${t('noMenuItems')}</p>`;
-                    } else {
-                        data.forEach(item => {
-                            let dateStr = item.createdDate ? new Date(item.createdDate).toLocaleDateString('tr-TR') : 'N/A';
-
-                            let buttons = isAdmin ? `
-                                    <div class="btn-group">
-                                        <button class="btn-edit" onclick="setUpdateMode(${item.id}, '${item.foodName}', '${item.description}', ${item.price}, ${item.calories})">EDIT</button>
-                                        <button class="btn-del" onclick="deleteItem(${item.id})">DELETE</button>
-                                    </div>` : `
-                                    <div class="btn-group">
-                                        <button class="btn-add-cart" onclick="addToCart(${item.id}, '${item.foodName}', ${item.price})">Sepete Ekle</button>
-                                    </div>`;
-
-                            html += `
-                                    <div class="card">
-                                        <h3>${item.foodName}</h3>
-                                        <p>${item.description}</p>
-                                        <p class="price-text">Price: ${item.price} TL</p>
-                                        <small>Energy: ${item.calories} kcal</small><br>
-                                        <small style="color: #888; font-size: 11px;">Added: ${dateStr}</small>
-                                        ${buttons}
-                                    </div>`;
-                        });
-                    }
-                    document.getElementById('menu-listesi').innerHTML = html;
+                    menuData = Array.isArray(data) ? data : [];
+                    renderMenu();
                 })
                 .catch(err => {
                     document.getElementById('menu-listesi').innerHTML =
@@ -300,21 +290,81 @@
         }
 
         function filterMenu() {
-            let input = document.getElementById('searchInput').value.toLowerCase();
-            let cards = document.getElementsByClassName('card');
-
-            for (let i = 0; i < cards.length; i++) {
-                let foodName = cards[i].getElementsByTagName('h3')[0].innerText.toLowerCase();
-                cards[i].style.display = foodName.includes(input) ? "" : "none";
-            }
+            renderMenu();
         }
 
-        function setUpdateMode(id, name, desc, price, energy) {
+        function applyFilters() {
+            renderMenu();
+        }
+
+        function renderMenu() {
+            const searchInput = document.getElementById('searchInput');
+            const categoryFilter = document.getElementById('categoryFilter');
+
+            const searchText = (searchInput?.value || '').toLowerCase();
+            const selectedCategory = categoryFilter ? categoryFilter.value : 'all';
+
+            let filtered = menuData;
+
+            if (searchText) {
+                filtered = filtered.filter(item =>
+                    (item.foodName || '').toLowerCase().includes(searchText)
+                );
+            }
+
+            if (selectedCategory !== 'all') {
+                filtered = filtered.filter(item =>
+                    String(item.categoryId || '') === selectedCategory
+                );
+            }
+
+            let html = '';
+            if (filtered.length === 0) {
+                html = `<p style="text-align:center;">${t('noMenuItems')}</p>`;
+            } else {
+                filtered.forEach(item => {
+                    const randomImage = menuImages[Math.floor(Math.random() * menuImages.length)];
+                    const dateStr = item.createdDate ? new Date(item.createdDate).toLocaleDateString('tr-TR') : 'N/A';
+                    const categoryLabel = item.categoryName ? `<small>${item.categoryName}</small><br>` : '';
+
+                    const buttons = isAdmin ? `
+                            <div class="btn-group">
+                                <button class="btn-edit" onclick="setUpdateMode(${item.id}, '${item.foodName}', '${item.description}', ${item.price}, ${item.calories}, ${item.categoryId || 'null'})">EDIT</button>
+                                <button class="btn-del" onclick="deleteItem(${item.id})">DELETE</button>
+                            </div>` : `
+                            <div class="btn-group">
+                                <button class="btn-add-cart" onclick="addToCart(${item.id}, '${item.foodName}', ${item.price})">Sepete Ekle</button>
+                            </div>`;
+
+                    html += `
+                            <div class="card">
+                                <div class="card-image-wrapper">
+                                    <img src="${randomImage}" alt="${item.foodName}" class="card-image" loading="lazy">
+                                </div>
+                                <h3>${item.foodName}</h3>
+                                <p>${item.description}</p>
+                                <p class="price-text">Price: ${item.price} TL</p>
+                                ${categoryLabel}
+                                <small>Energy: ${item.calories} kcal</small><br>
+                                <small style="color: #888; font-size: 11px;">Added: ${dateStr}</small>
+                                ${buttons}
+                            </div>`;
+                });
+            }
+
+            document.getElementById('menu-listesi').innerHTML = html;
+        }
+
+        function setUpdateMode(id, name, desc, price, energy, categoryId) {
             updateId = id;
             document.getElementById('yName').value = name;
             document.getElementById('yDesc').value = desc;
             document.getElementById('yPrice').value = price;
             document.getElementById('yEnergy').value = energy;
+            const categorySelect = document.getElementById('yCategory');
+            if (categorySelect) {
+                categorySelect.value = categoryId && categoryId !== 'null' ? String(categoryId) : '';
+            }
 
             document.getElementById('form-title').innerText = "Edit Item";
             document.getElementById('btn-action').innerText = "UPDATE ITEM";
@@ -328,7 +378,13 @@
                 description: document.getElementById('yDesc').value,
                 price: parseFloat(document.getElementById('yPrice').value),
                 calories: parseInt(document.getElementById('yEnergy').value),
-                isActive: true
+                isActive: true,
+                categoryId: (function () {
+                    const select = document.getElementById('yCategory');
+                    const val = select ? select.value : '';
+                    const parsed = parseInt(val || '0');
+                    return isNaN(parsed) || parsed <= 0 ? null : parsed;
+                })()
             };
 
             const method = updateId ? 'PUT' : 'POST';
@@ -698,13 +754,48 @@
             }
         }
 
+        function loadCategories() {
+            fetch('/api/Category')
+                .then(res => res.ok ? res.json() : Promise.reject())
+                .then(data => {
+                    categories = Array.isArray(data) ? data : [];
+
+                    const categorySelect = document.getElementById('yCategory');
+                    const filterSelect = document.getElementById('categoryFilter');
+
+                    if (categorySelect) {
+                        categorySelect.innerHTML = '<option value=\"\">Kategori seciniz</option>';
+                        categories.forEach(c => {
+                            const opt = document.createElement('option');
+                            opt.value = c.id;
+                            opt.textContent = c.name;
+                            categorySelect.appendChild(opt);
+                        });
+                    }
+
+                    if (filterSelect) {
+                        filterSelect.innerHTML = '<option value=\"all\">Tüm Kategoriler</option>';
+                        categories.forEach(c => {
+                            const opt = document.createElement('option');
+                            opt.value = c.id;
+                            opt.textContent = c.name;
+                            filterSelect.appendChild(opt);
+                        });
+                    }
+                })
+                .catch(() => {
+                    // kategori yuklenemese bile uygulama calismaya devam etsin
+                });
+        }
+
         updateCartCount();
+        loadCategories();
         loadMenu();
         // Admin ve SuperAdmin icin yonetim verilerini yukle
         if (isAdmin) {
             loadRestaurants();
             loadUsers();
-            document.querySelector('[data-target="section-orders"]')?.addEventListener('click', () => {
+            document.querySelector('[data-target=\"section-orders\"]')?.addEventListener('click', () => {
                 setTimeout(loadOrders, 100);
             });
         }
