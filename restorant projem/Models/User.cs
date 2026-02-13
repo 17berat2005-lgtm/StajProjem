@@ -7,7 +7,10 @@ public class User
     public string Password { get; set; } = string.Empty;
     public string Role { get; set; } = string.Empty;
     public DateTime CreatedDate { get; set; } = DateTime.Now;
+    public string? Address { get; set; }
+    public string? Phone { get; set; }
 }
+
 
 
 

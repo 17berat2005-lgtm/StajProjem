@@ -99,9 +99,29 @@ BEGIN
 END
 ";
 
+        var alterUsersSql = @"
+IF COL_LENGTH('Users', 'Address') IS NULL
+BEGIN
+    ALTER TABLE [dbo].[Users] ADD [Address] NVARCHAR(250) NULL;
+END
+
+IF COL_LENGTH('Users', 'Phone') IS NULL
+BEGIN
+    ALTER TABLE [dbo].[Users] ADD [Phone] NVARCHAR(50) NULL;
+END
+";
+
         try
         {
             context.Database.ExecuteSqlRaw(createOrdersSql);
+        }
+        catch
+        {
+        }
+
+        try
+        {
+            context.Database.ExecuteSqlRaw(alterUsersSql);
         }
         catch
         {
@@ -190,7 +210,43 @@ END
                 Calories = 430,
                 IsActive = true,
                 CreatedDate = now
-            }, "Tatli")
+            }, "Tatli"),
+            (new MenuDetail
+            {
+                FoodName = "Kremali Mantar Corbasi",
+                Description = "Krema bazli, taze mantarli sicak baslangic corbasi.",
+                Price = 95m,
+                Calories = 220,
+                IsActive = true,
+                CreatedDate = now
+            }, "Baslangic"),
+            (new MenuDetail
+            {
+                FoodName = "Bruschetta Trio",
+                Description = "Domates-feslegen, mozzarella ve pestolu uc cesit bruschetta.",
+                Price = 120m,
+                Calories = 310,
+                IsActive = true,
+                CreatedDate = now
+            }, "Baslangic"),
+            (new MenuDetail
+            {
+                FoodName = "Ev Yapimi Limonata",
+                Description = "Taze sikilmis limon, nane ve az seker ile hazirlanmis serin icecek.",
+                Price = 75m,
+                Calories = 140,
+                IsActive = true,
+                CreatedDate = now
+            }, "Icecek"),
+            (new MenuDetail
+            {
+                FoodName = "Cilekli Milkshake",
+                Description = "Gercek dondurma ve taze cilekle hazirlanmis milkshake.",
+                Price = 95m,
+                Calories = 420,
+                IsActive = true,
+                CreatedDate = now
+            }, "Icecek")
         };
 
         var addedAny = false;

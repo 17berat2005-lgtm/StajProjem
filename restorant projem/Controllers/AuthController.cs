@@ -57,6 +57,48 @@ public class AuthController : ControllerBase
         return Ok(new { message = "Kayit basarili!" });
     }
 
+    [HttpGet("profile/{id}")]
+    public async Task<IActionResult> GetProfile(int id)
+    {
+        var user = await _context.Users.FindAsync(id);
+        if (user == null) return NotFound();
+
+        return Ok(new
+        {
+            user.ID,
+            user.Username,
+            user.Role,
+            user.CreatedDate,
+            user.Address,
+            user.Phone
+        });
+    }
+
+    public class UpdateProfileRequest
+    {
+        public string? Address { get; set; }
+        public string? Phone { get; set; }
+    }
+
+    [HttpPut("profile/{id}")]
+    public async Task<IActionResult> UpdateProfile(int id, [FromBody] UpdateProfileRequest request)
+    {
+        var user = await _context.Users.FindAsync(id);
+        if (user == null) return NotFound();
+
+        user.Address = request.Address;
+        user.Phone = request.Phone;
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            message = "Profil guncellendi.",
+            user.ID,
+            user.Address,
+            user.Phone
+        });
+    }
+
     [HttpGet("users")]
     public async Task<ActionResult<IEnumerable<User>>> GetUsers()
     {

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kanka Restoran | Management Panel</title>
     <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
@@ -16,6 +17,7 @@
                 <option value="en">EN</option>
             </select>
             <span id="user-display"></span>
+            <button onclick="openProfile()" class="btn-profile" id="profile-btn">Profilim</button>
             <button onclick="openCart()" class="btn-cart" id="cart-btn">
                 Sepet (<span id="cart-count">0</span>)
             </button>
@@ -32,7 +34,8 @@
 
         <div id="admin-area" class="admin-panel">
             <div class="admin-tabs" id="admin-tabs">
-                <button class="admin-tab active" data-target="section-menu">Menu Yonetimi</button>
+                <button class="admin-tab active" data-target="section-dashboard">Dashboard</button>
+                <button class="admin-tab" data-target="section-menu">Menu Yonetimi</button>
                 <button class="admin-tab" data-target="section-restaurants">Restoranlar</button>
                 <button class="admin-tab" data-target="section-users">Kullanicilar</button>
                 <button class="admin-tab" data-target="section-orders">Siparisler</button>
@@ -52,7 +55,28 @@
             </div>
         </div>
 
-        <section id="section-menu" class="section-visible">
+        <section id="section-dashboard" class="section-visible">
+            <h2 class="list-title">Dashboard / Istatistikler</h2>
+            <div class="menu-grid">
+                <div class="card">
+                    <h3>Genel Durum</h3>
+                    <p><strong>Toplam Siparis:</strong> <span id="stat-total-orders">0</span></p>
+                    <p><strong>Toplam Ciro:</strong> <span id="stat-total-revenue">0</span> TL</p>
+                    <p><strong>Bugünkü Siparis:</strong> <span id="stat-today-orders">0</span></p>
+                    <p><strong>Bugünkü Ciro:</strong> <span id="stat-today-revenue">0</span> TL</p>
+                </div>
+                <div class="card">
+                    <h3>Son 7 Gün Satış</h3>
+                    <canvas id="sales-chart" height="160"></canvas>
+                </div>
+                <div class="card">
+                    <h3>En Cok Satan 5 Urun</h3>
+                    <canvas id="top-items-chart" height="160"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section id="section-menu" class="section-hidden">
             <div class="search-container">
                 <input type="text" id="searchInput" class="search-input" onkeyup="filterMenu()" placeholder="Menude ara...">
             </div>
@@ -109,6 +133,37 @@
             </div>
         </div>
     </div>
+
+    <div id="profile-modal" class="modal">
+        <div class="profile-modal-content">
+            <span class="close" onclick="closeProfile()">&times;</span>
+            <h2>Profilim</h2>
+            <form class="profile-form" onsubmit="event.preventDefault(); saveProfile();">
+                <div>
+                    <label>Kullanici Adi</label>
+                    <input type="text" id="profile-username" disabled>
+                </div>
+                <div>
+                    <label>Adres</label>
+                    <input type="text" id="profile-address" placeholder="Adresinizi girin">
+                </div>
+                <div>
+                    <label>Telefon</label>
+                    <input type="text" id="profile-phone" placeholder="Telefon numaraniz">
+                </div>
+                <div>
+                    <label>Kayit Tarihi</label>
+                    <input type="text" id="profile-created" disabled>
+                </div>
+                <div class="profile-footer">
+                    <button type="button" class="btn-del" onclick="closeProfile()">Kapat</button>
+                    <button type="submit" class="btn-edit">Kaydet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast-container" class="toast-container"></div>
 
     <script>
         const LANG_KEY = 'appLang';
@@ -219,6 +274,58 @@
             window.location.href = 'login.html';
         }
 
+        function openProfile() {
+            if (!userId || userId === 0) {
+                showToast(t('userNotFoundAlert'), 'error');
+                return;
+            }
+
+            fetch(`/api/Auth/profile/${userId}`)
+                .then(res => res.ok ? res.json() : Promise.reject())
+                .then(data => {
+                    document.getElementById('profile-username').value = data.username || '';
+                    document.getElementById('profile-address').value = data.address || '';
+                    document.getElementById('profile-phone').value = data.phone || '';
+                    document.getElementById('profile-created').value =
+                        data.createdDate ? new Date(data.createdDate).toLocaleString('tr-TR') : '';
+
+                    document.getElementById('profile-modal').style.display = 'block';
+                })
+                .catch(() => {
+                    showToast('Profil bilgileri yuklenirken hata olustu.', 'error');
+                });
+        }
+
+        function closeProfile() {
+            document.getElementById('profile-modal').style.display = 'none';
+        }
+
+        function saveProfile() {
+            if (!userId || userId === 0) {
+                showToast(t('userNotFoundAlert'), 'error');
+                return;
+            }
+
+            const payload = {
+                address: document.getElementById('profile-address').value,
+                phone: document.getElementById('profile-phone').value
+            };
+
+            fetch(`/api/Auth/profile/${userId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+                .then(res => res.ok ? res.json() : Promise.reject())
+                .then(() => {
+                    showToast('Profiliniz guncellendi.', 'success');
+                    closeProfile();
+                })
+                .catch(() => {
+                    showToast('Profil guncellenirken hata olustu.', 'error');
+                });
+        }
+
         const currentLang = getLang();
         const langSelect = document.getElementById('lang-select');
         if (langSelect) {
@@ -271,6 +378,30 @@
         function logout() {
             localStorage.clear();
             window.location.href = 'login.html';
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+
+            container.appendChild(toast);
+
+            requestAnimationFrame(() => {
+                toast.classList.add('toast-show');
+            });
+
+            setTimeout(() => {
+                toast.classList.remove('toast-show');
+                setTimeout(() => {
+                    if (toast.parentNode === container) {
+                        container.removeChild(toast);
+                    }
+                }, 250);
+            }, 3000);
         }
 
         function loadMenu() {
@@ -450,13 +581,13 @@
                             <div class="card">
                                 <h3>${u.username}</h3>
                                 <p>Mevcut rol: <strong>${u.role}</strong></p>
-                                <div style="margin-top:8px; display:flex; gap:6px; align-items:center;">
+                                <div class="user-role-row">
                                     <select id="role-${u.id}">
                                         <option value="User" ${u.role === 'User' ? 'selected' : ''}>User</option>
                                         <option value="Admin" ${u.role === 'Admin' ? 'selected' : ''}>Admin</option>
                                         <option value="SuperAdmin" ${u.role === 'SuperAdmin' ? 'selected' : ''}>SuperAdmin</option>
                                     </select>
-                                    <button class="btn-edit" style="flex:0 0 auto;" onclick="updateUserRole(${u.id})">Rol Kaydet</button>
+                                    <button class="btn-edit" onclick="updateUserRole(${u.id})">Rol Kaydet</button>
                                 </div>
                                 <small>Olusturulma: ${u.createdDate ? new Date(u.createdDate).toLocaleDateString('tr-TR') : ''}</small>
                             </div>`).join('');
@@ -482,10 +613,10 @@
             })
                 .then(res => res.ok ? res.json() : Promise.reject())
                 .then(() => {
-                    alert(t('roleUpdated'));
+                    showToast(t('roleUpdated'), 'success');
                     loadUsers();
                 })
-                .catch(() => alert(t('roleUpdateError')));
+                .catch(() => showToast(t('roleUpdateError'), 'error'));
         }
 
         function updateCartCount() {
@@ -502,7 +633,7 @@
                 cart.push({ menuDetailId: menuId, foodName, price, quantity: 1 });
             }
             updateCartCount();
-            alert(`${foodName} ${t('itemAddedToCart')}`);
+            showToast(`${foodName} ${t('itemAddedToCart')}`, 'success');
         }
 
         function openCart() {
@@ -533,11 +664,11 @@
                             <strong>${item.foodName}</strong>
                             <p>${item.price} TL x ${item.quantity} = ${itemTotal.toFixed(2)} TL</p>
                         </div>
-                        <div style="display:flex; gap:8px; align-items:center;">
+                        <div class="cart-actions-row">
                             <button onclick="changeQuantity(${index}, -1)" class="btn-qty">-</button>
                             <span>${item.quantity}</span>
                             <button onclick="changeQuantity(${index}, 1)" class="btn-qty">+</button>
-                            <button onclick="removeFromCart(${index})" class="btn-del" style="padding:5px 10px;">X</button>
+                            <button onclick="removeFromCart(${index})" class="btn-del cart-remove-btn">X</button>
                         </div>
                     </div>
                 `;
@@ -563,12 +694,12 @@
 
         function checkout() {
             if (cart.length === 0) {
-                alert(t('emptyCartAlert'));
+                showToast(t('emptyCartAlert'), 'warning');
                 return;
             }
 
             if (!userId || userId === 0) {
-                alert(t('userNotFoundAlert'));
+                showToast(t('userNotFoundAlert'), 'error');
                 return;
             }
 
@@ -592,7 +723,7 @@
             })
                 .then(res => res.ok ? res.json() : Promise.reject())
                 .then(() => {
-                    alert(t('orderSuccess'));
+                    showToast(t('orderSuccess'), 'success');
                     cart = [];
                     updateCartCount();
                     closeCart();
@@ -600,7 +731,7 @@
                         loadOrderHistory();
                     }
                 })
-                .catch(() => alert(t('orderError')));
+                .catch(() => showToast(t('orderError'), 'error'));
         }
 
         function openOrderHistory() {
@@ -649,9 +780,9 @@
                                 <p><strong>Toplam:</strong> ${order.totalAmount.toFixed(2)} TL</p>
                                 <p><strong>Tarih:</strong> ${new Date(order.createdDate).toLocaleString('tr-TR')}</p>
                                 ${order.notes ? `<p><strong>Not:</strong> ${order.notes}</p>` : ''}
-                                <details style="margin-top:10px;">
-                                    <summary style="cursor:pointer; color:#3b82f6;">Urunler</summary>
-                                    <ul style="margin-top:8px; padding-left:20px;">${itemsHtml}</ul>
+                                <details class="order-details">
+                                    <summary class="order-summary-toggle">Urunler</summary>
+                                    <ul class="order-items-list">${itemsHtml}</ul>
                                 </details>
                             </div>
                         `;
@@ -693,19 +824,19 @@
                         return `
                             <div class="card">
                                 <h3>Siparis #${order.id} - ${order.userName || 'Bilinmeyen'}</h3>
-                                <p><strong>Durum:</strong> 
-                                    <select id="status-${order.id}" onchange="updateOrderStatus(${order.id})" style="margin-left:8px; padding:4px 8px; border-radius:6px;">
+                                <p class="order-status-row"><strong>Durum:</strong> 
+                                    <select id="status-${order.id}" onchange="updateOrderStatus(${order.id})" class="order-status-select">
                                         ${statusOptions.map(s => `<option value="${s}" ${order.status === s ? 'selected' : ''}>${s}</option>`).join('')}
                                     </select>
                                 </p>
                                 <p><strong>Toplam:</strong> ${order.totalAmount.toFixed(2)} TL</p>
                                 <p><strong>Tarih:</strong> ${new Date(order.createdDate).toLocaleString('tr-TR')}</p>
                                 ${order.notes ? `<p><strong>Not:</strong> ${order.notes}</p>` : ''}
-                                <details style="margin-top:10px;">
-                                    <summary style="cursor:pointer; color:#3b82f6;">Urunler</summary>
-                                    <ul style="margin-top:8px; padding-left:20px;">${itemsHtml}</ul>
+                                <details class="order-details">
+                                    <summary class="order-summary-toggle">Urunler</summary>
+                                    <ul class="order-items-list">${itemsHtml}</ul>
                                 </details>
-                                <button onclick="cancelOrder(${order.id})" class="btn-del" style="margin-top:10px; width:100%;">Siparisi Iptal Et</button>
+                                <button onclick="cancelOrder(${order.id})" class="btn-del order-cancel-btn">Siparisi Iptal Et</button>
                             </div>
                         `;
                     }).join('');
@@ -729,10 +860,10 @@
             })
                 .then(res => res.ok ? res.json() : Promise.reject())
                 .then(() => {
-                    alert(t('orderStatusUpdated'));
+                    showToast(t('orderStatusUpdated'), 'success');
                     loadOrders();
                 })
-                .catch(() => alert(t('orderStatusError')));
+                .catch(() => showToast(t('orderStatusError'), 'error'));
         }
 
         function cancelOrder(orderId) {
@@ -741,16 +872,20 @@
             fetch(`/api/Order/${orderId}`, { method: 'DELETE' })
                 .then(res => res.ok ? res.json() : Promise.reject())
                 .then(() => {
-                    alert(t('orderCancelled'));
+                    showToast(t('orderCancelled'), 'success');
                     loadOrders();
                 })
-                .catch(() => alert(t('orderCancelError')));
+                .catch(() => showToast(t('orderCancelError'), 'error'));
         }
 
         window.onclick = function(event) {
-            const modal = document.getElementById('cart-modal');
-            if (event.target === modal) {
+            const cartModal = document.getElementById('cart-modal');
+            const profileModal = document.getElementById('profile-modal');
+            if (event.target === cartModal) {
                 closeCart();
+            }
+            if (event.target === profileModal) {
+                closeProfile();
             }
         }
 
@@ -783,20 +918,89 @@
                         });
                     }
                 })
+                .catch(() => {});
+        }
+
+        let salesChartInstance = null;
+        let topItemsChartInstance = null;
+
+        function loadDashboard() {
+            fetch('/api/Order/admin/stats')
+                .then(res => res.ok ? res.json() : Promise.reject())
+                .then(data => {
+                    document.getElementById('stat-total-orders').textContent = data.totalOrders ?? 0;
+                    document.getElementById('stat-total-revenue').textContent = (data.totalRevenue ?? 0).toFixed(2);
+                    document.getElementById('stat-today-orders').textContent = data.todayOrders ?? 0;
+                    document.getElementById('stat-today-revenue').textContent = (data.todayRevenue ?? 0).toFixed(2);
+
+                    const daily = data.dailySales || [];
+                    const labels = daily.map(d => new Date(d.date).toLocaleDateString('tr-TR'));
+                    const values = daily.map(d => d.totalAmount);
+
+                    const salesCtx = document.getElementById('sales-chart').getContext('2d');
+                    if (salesChartInstance) salesChartInstance.destroy();
+                    salesChartInstance = new Chart(salesCtx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Ciro (TL)',
+                                data: values,
+                                borderColor: '#10b981',
+                                backgroundColor: 'rgba(16,185,129,0.15)',
+                                tension: 0.3,
+                                fill: true
+                            }]
+                        },
+                        options: {
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                y: { beginAtZero: true }
+                            }
+                        }
+                    });
+
+                    const topItems = data.topItems || [];
+                    const itemLabels = topItems.map(t => t.foodName);
+                    const itemValues = topItems.map(t => t.quantity);
+
+                    const topCtx = document.getElementById('top-items-chart').getContext('2d');
+                    if (topItemsChartInstance) topItemsChartInstance.destroy();
+                    topItemsChartInstance = new Chart(topCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: itemLabels,
+                            datasets: [{
+                                label: 'Adet',
+                                data: itemValues,
+                                backgroundColor: 'rgba(59,130,246,0.6)'
+                            }]
+                        },
+                        options: {
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                y: { beginAtZero: true }
+                            }
+                        }
+                    });
+                })
                 .catch(() => {
-                    // kategori yuklenemese bile uygulama calismaya devam etsin
+                    showToast('Dashboard verileri yuklenirken hata olustu.', 'error');
                 });
         }
 
         updateCartCount();
         loadCategories();
         loadMenu();
-        // Admin ve SuperAdmin icin yonetim verilerini yukle
         if (isAdmin) {
+            loadDashboard();
             loadRestaurants();
             loadUsers();
             document.querySelector('[data-target=\"section-orders\"]')?.addEventListener('click', () => {
                 setTimeout(loadOrders, 100);
+            });
+            document.querySelector('[data-target=\"section-dashboard\"]')?.addEventListener('click', () => {
+                setTimeout(loadDashboard, 100);
             });
         }
     </script>

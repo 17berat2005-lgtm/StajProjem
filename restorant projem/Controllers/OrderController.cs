@@ -132,6 +132,74 @@ public class OrderController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("admin/stats")]
+    public async Task<IActionResult> GetStats()
+    {
+        var now = DateTime.Now;
+        var today = now.Date;
+        var last7Start = today.AddDays(-6);
+        var last30Start = today.AddDays(-29);
+
+        var allOrders = await _context.Orders.ToListAsync();
+
+        var totalOrders = allOrders.Count;
+        var totalRevenue = allOrders.Sum(o => o.TotalAmount);
+        var todayOrders = allOrders.Count(o => o.CreatedDate.Date == today);
+        var todayRevenue = allOrders.Where(o => o.CreatedDate.Date == today).Sum(o => o.TotalAmount);
+        var last30Orders = allOrders.Count(o => o.CreatedDate.Date >= last30Start);
+
+        var dailyQuery = await _context.Orders
+            .Where(o => o.CreatedDate.Date >= last7Start)
+            .GroupBy(o => o.CreatedDate.Date)
+            .Select(g => new
+            {
+                Date = g.Key,
+                TotalAmount = g.Sum(x => x.TotalAmount),
+                Count = g.Count()
+            })
+            .ToListAsync();
+
+        var dailySales = Enumerable.Range(0, 7)
+            .Select(offset =>
+            {
+                var d = last7Start.AddDays(offset);
+                var found = dailyQuery.FirstOrDefault(x => x.Date == d);
+                return new
+                {
+                    Date = d,
+                    TotalAmount = found?.TotalAmount ?? 0m,
+                    Count = found?.Count ?? 0
+                };
+            }).ToList();
+
+        var topItems = await _context.OrderItems
+            .Include(oi => oi.MenuDetail)
+            .GroupBy(oi => oi.MenuDetailId)
+            .Select(g => new
+            {
+                MenuDetailId = g.Key,
+                FoodName = g.First().MenuDetail != null ? g.First().MenuDetail.FoodName : "Bilinmeyen",
+                Quantity = g.Sum(x => x.Quantity),
+                Revenue = g.Sum(x => x.SubTotal)
+            })
+            .OrderByDescending(x => x.Quantity)
+            .Take(5)
+            .ToListAsync();
+
+        var response = new
+        {
+            TotalOrders = totalOrders,
+            TotalRevenue = totalRevenue,
+            TodayOrders = todayOrders,
+            TodayRevenue = todayRevenue,
+            Last30DaysOrders = last30Orders,
+            DailySales = dailySales,
+            TopItems = topItems
+        };
+
+        return Ok(response);
+    }
+
     [HttpPut("{orderId}/status")]
     public async Task<IActionResult> UpdateOrderStatus(int orderId, [FromBody] UpdateStatusRequest request)
     {
