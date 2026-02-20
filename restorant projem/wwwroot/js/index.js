@@ -2,6 +2,18 @@ let updateId = null;
 const userRole = localStorage.getItem('userRole');
 const userName = localStorage.getItem('userName') || localStorage.getItem('username');
 
+// Sepete eklerken kullanılacak geçici ürün
+let pendingCartItem = null;
+
+// Varsayılan malzeme listesi (geliştirildikçe çeşitlendirilebilir)
+const DEFAULT_INGREDIENTS = [
+    'Soğan',
+    'Domates',
+    'Marul',
+    'Turşu',
+    'Peynir'
+];
+
 document.addEventListener('DOMContentLoaded', () => {
     // Yetki kontrolü
     if (!userRole) {
@@ -21,16 +33,11 @@ document.addEventListener('DOMContentLoaded', () => {
             titleElement.innerText = "🔥 Kanka Restoran (Yönetim Paneli)";
         } else {
             titleElement.innerText = "🍔 Kanka Restoran (Menü)";
-            const adminArea = document.getElementById('admin-area');
-            if (adminArea) adminArea.style.display = 'none';
         }
     }
 
-    if (userRole === 'SuperAdmin') {
-        const roleArea = document.getElementById('role-area');
-        if (roleArea) roleArea.style.display = 'block';
-        loadUsersForRole();
-    }
+    wireEditModalEvents();
+    wireIngredientModalEvents();
 
     loadMenu();
 });
@@ -44,94 +51,6 @@ function logout() {
     window.location.href = 'login.html';
 }
 
-// Süperadmin için kullanıcılar
-function loadUsersForRole() {
-    showLoader();
-
-    fetch('/api/Auth/users')
-        .then(res => res.json())
-        .then(users => {
-            const container = document.getElementById('user-roles-content');
-            if (!container) return;
-
-            if (!users.length) {
-                container.innerHTML = "<p>Hiç kullanıcı bulunamadı.</p>";
-                return;
-            }
-
-            let html = `<table style="width:100%; border-collapse:collapse;">
-                            <thead>
-                                <tr>
-                                    <th style="text-align:left; padding:6px 4px;">Kullanıcı</th>
-                                    <th style="text-align:left; padding:6px 4px;">Rol</th>
-                                    <th style="text-align:left; padding:6px 4px;">Yeni Şifre (reset)</th>
-                                </tr>
-                            </thead>
-                            <tbody>`;
-
-            users.forEach(u => {
-                html += `<tr>
-                            <td style="padding:4px 4px;">${u.username}</td>
-                            <td style="padding:4px 4px;">
-                                <select onchange="updateUserRole(${u.id}, this.value)" style="padding:4px 8px; border-radius:6px; border:1px solid #d1d5db;">
-                                    <option value="User" ${u.role === 'User' ? 'selected' : ''}>User</option>
-                                    <option value="Admin" ${u.role === 'Admin' ? 'selected' : ''}>Admin</option>
-                                    <option value="SuperAdmin" ${u.role === 'SuperAdmin' ? 'selected' : ''}>SuperAdmin</option>
-                                </select>
-                            </td>
-                            <td style="padding:4px 4px;">
-                                <input type="password" id="pwd-${u.id}" placeholder="Yeni şifre" style="padding:4px 6px; border-radius:6px; border:1px solid #d1d5db; width:140px;" />
-                                <button onclick="resetUserPassword(${u.id})" style="margin-left:4px; padding:4px 8px; border-radius:6px; border:none; background:#22c55e; color:#fff; font-size:12px; cursor:pointer;">Kaydet</button>
-                            </td>
-                          </tr>`;
-            });
-
-            html += "</tbody></table>";
-            container.innerHTML = html;
-        })
-        .catch(() => {
-            const container = document.getElementById('user-roles-content');
-            if (container) container.innerHTML = "<p style='color:red;'>Kullanıcılar yüklenemedi.</p>";
-        })
-        .finally(() => {
-            hideLoader();
-        });
-}
-
-function updateUserRole(id, role) {
-    fetch(`/api/Auth/${id}/role`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role })
-    }).then(res => {
-        if (!res.ok) {
-            alert('Rol güncellenemedi!');
-        }
-    }).catch(() => alert('Rol güncellenemedi!'));
-}
-
-function resetUserPassword(id) {
-    const input = document.getElementById(`pwd-${id}`);
-    if (!input) return;
-    const newPass = input.value.trim();
-    if (!newPass) {
-        alert('Lütfen yeni şifre gir.');
-        return;
-    }
-
-    fetch(`/api/Auth/${id}/password`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: newPass })
-    }).then(res => {
-        if (res.ok) {
-            alert('Şifre güncellendi.');
-            input.value = '';
-        } else {
-            alert('Şifre güncellenemedi.');
-        }
-    }).catch(() => alert('Şifre güncellenemedi.'));
-}
 
 // Sepet
 function getCart() {
@@ -146,7 +65,11 @@ function saveCart(cart) {
 
 function addToCart(item) {
     const cart = getCart();
-    const existing = cart.find(c => c.id === item.id);
+    // Aynı ürün ve aynı malzeme kombinasyonu varsa quantity artır
+    const existing = cart.find(c =>
+        c.id === item.id &&
+        JSON.stringify(c.removedIngredients || []) === JSON.stringify(item.removedIngredients || [])
+    );
     if (existing) {
         existing.quantity += 1;
     } else {
@@ -154,6 +77,138 @@ function addToCart(item) {
     }
     saveCart(cart);
     alert('Ürün sepete eklendi.');
+}
+
+// Ürün düzenleme popup'ı bağlama
+function wireEditModalEvents() {
+    const overlay = document.getElementById('edit-modal-overlay');
+    const cancelBtn = document.getElementById('edit-cancel');
+    const saveBtn = document.getElementById('edit-save');
+
+    if (!overlay || !cancelBtn || !saveBtn) return;
+
+    cancelBtn.addEventListener('click', () => {
+        overlay.classList.add('modal-hidden');
+        updateId = null;
+    });
+
+    saveBtn.addEventListener('click', () => {
+        const nameInput = document.getElementById('edit-name');
+        const descInput = document.getElementById('edit-desc');
+        const priceInput = document.getElementById('edit-price');
+        const energyInput = document.getElementById('edit-energy');
+
+        if (!nameInput || !descInput || !priceInput || !energyInput) return;
+
+        const payload = {
+            id: updateId || 0,
+            foodName: nameInput.value,
+            description: descInput.value,
+            price: parseFloat(priceInput.value),
+            calories: parseInt(energyInput.value),
+            isActive: true
+        };
+
+        const method = updateId ? 'PUT' : 'POST';
+        const url = updateId ? `/api/MenuDetail/${updateId}` : '/api/MenuDetail';
+
+        showLoader();
+
+        fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        }).then(() => {
+            updateId = null;
+            overlay.classList.add('modal-hidden');
+            location.reload();
+        }).finally(() => {
+            hideLoader();
+        });
+    });
+}
+
+// Malzeme çıkarma popup'ı bağlama
+function wireIngredientModalEvents() {
+    const overlay = document.getElementById('ingredient-modal-overlay');
+    const cancelBtn = document.getElementById('ingredient-cancel');
+    const confirmBtn = document.getElementById('ingredient-confirm');
+
+    if (!overlay || !cancelBtn || !confirmBtn) return;
+
+    cancelBtn.addEventListener('click', () => {
+        overlay.classList.add('modal-hidden');
+        pendingCartItem = null;
+    });
+
+    confirmBtn.addEventListener('click', () => {
+        if (!pendingCartItem) {
+            overlay.classList.add('modal-hidden');
+            return;
+        }
+
+        const listContainer = document.getElementById('ingredient-list');
+        if (!listContainer) return;
+
+        const checkboxes = listContainer.querySelectorAll('input[type="checkbox"]');
+        const removed = [];
+
+        checkboxes.forEach(cb => {
+            if (cb.checked) {
+                removed.push(cb.value);
+            }
+        });
+
+        const itemForCart = {
+            id: pendingCartItem.id,
+            name: pendingCartItem.name,
+            price: pendingCartItem.price,
+            removedIngredients: removed
+        };
+
+        addToCart(itemForCart);
+
+        overlay.classList.add('modal-hidden');
+        pendingCartItem = null;
+    });
+}
+
+// Malzeme popup'ını aç
+function openIngredientModal(item) {
+    const overlay = document.getElementById('ingredient-modal-overlay');
+    const title = document.getElementById('ingredient-title');
+    const listContainer = document.getElementById('ingredient-list');
+
+    if (!overlay || !title || !listContainer) return;
+
+    pendingCartItem = {
+        id: item.id,
+        name: item.foodName,
+        price: item.price
+    };
+
+    title.textContent = `${item.foodName} için malzeme çıkar`;
+
+    listContainer.innerHTML = '';
+
+    DEFAULT_INGREDIENTS.forEach(ing => {
+        const label = document.createElement('label');
+        label.className = 'ingredient-chip';
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.value = ing;
+
+        const span = document.createElement('span');
+        span.textContent = ing;
+
+        label.appendChild(checkbox);
+        label.appendChild(span);
+
+        listContainer.appendChild(label);
+    });
+
+    overlay.classList.remove('modal-hidden');
 }
 
 // Menü yükleme
@@ -167,49 +222,99 @@ function loadMenu() {
         })
         .then(data => {
             const container = document.getElementById('menu-listesi');
-            if (!container) return;
+            const template = document.getElementById('menu-card-template');
+            if (!container || !template) return;
 
-            let html = '';
+            container.innerHTML = '';
+
             if (!data.length) {
-                html = '<p style="text-align:center;">Menüde ürün bulunamadı.</p>';
-            } else {
-                const imagePool = [
-                    'images/images.jpg',
-                    'images/indir.jpg',
-                    'images/indir (1).jpg'
-                ];
-
-                data.forEach((item, index) => {
-                    let dateStr = item.createdDate ? new Date(item.createdDate).toLocaleDateString('tr-TR') : 'N/A';
-
-                    let adminButtons = (userRole === 'Admin' || userRole === 'SuperAdmin') ? `
-                            <div class="btn-group">
-                                <button class="btn-edit" onclick="setUpdateMode(${item.id}, '${item.foodName}', '${item.description}', ${item.price}, ${item.calories})">✏️ Düzenle</button>
-                                <button class="btn-del" onclick="deleteItem(${item.id})">🗑️ Sil</button>
-                            </div>` : '';
-
-                    let userButtons = (userRole === 'Admin' || userRole === 'SuperAdmin') ? '' : `
-                            <div class="btn-group">
-                                <button class="btn-edit" style="background:#22c55e;" onclick="addToCart({ id: ${item.id}, name: '${item.foodName}', price: ${item.price} })">🛒 Sepete Ekle</button>
-                            </div>`;
-
-                    const imageSrc = imagePool[index % imagePool.length];
-
-                    html += `
-                            <div class="card">
-                                <div class="card-image">
-                                    <img src="${imageSrc}" alt="${item.foodName}">
-                                </div>
-                                <h3>🍔 ${item.foodName}</h3>
-                                <p>${item.description}</p>
-                                <p class="price-text">💰 Fiyat: ${item.price} TL</p>
-                                <small>🔥 Kalori: ${item.calories} kcal</small><br>
-                                <small style="color: #888; font-size: 11px;">🗓️ Eklenme: ${dateStr}</small>
-                                ${adminButtons || userButtons}
-                            </div>`;
-                });
+                const msg = document.createElement('p');
+                msg.style.textAlign = 'center';
+                msg.textContent = 'Menüde ürün bulunamadı.';
+                container.appendChild(msg);
+                return;
             }
-            container.innerHTML = html;
+
+            const imagePool = [
+                'images/images.jpg',
+                'images/indir.jpg',
+                'images/indir (1).jpg'
+            ];
+
+            data.forEach((item, index) => {
+                const fragment = template.content.cloneNode(true);
+
+                const card = fragment.querySelector('.card');
+                const img = fragment.querySelector('.card-image img');
+                const nameSpan = fragment.querySelector('.card-name');
+                const descP = fragment.querySelector('.card-desc');
+                const priceSpan = fragment.querySelector('.card-price');
+                const calSpan = fragment.querySelector('.card-cal-value');
+                const dateSpan = fragment.querySelector('.card-date-value');
+                const btnGroup = fragment.querySelector('.btn-group');
+
+                const imageSrc = imagePool[index % imagePool.length];
+                const dateStr = item.createdDate ? new Date(item.createdDate).toLocaleDateString('tr-TR') : 'N/A';
+
+                if (img) {
+                    img.src = imageSrc;
+                    img.alt = item.foodName;
+                }
+
+                if (nameSpan) nameSpan.textContent = item.foodName;
+                if (descP) descP.textContent = item.description;
+                if (priceSpan) priceSpan.textContent = item.price;
+                if (calSpan) calSpan.textContent = item.calories;
+                if (dateSpan) dateSpan.textContent = dateStr;
+
+                if (btnGroup) {
+                    // Yönetici butonları
+                    if (userRole === 'Admin' || userRole === 'SuperAdmin') {
+                        const editBtn = document.createElement('button');
+                        editBtn.className = 'btn-edit';
+                        editBtn.textContent = '✏️ Düzenle';
+                        editBtn.addEventListener('click', () => {
+                            // Popup için alanları doldur
+                            const overlay = document.getElementById('edit-modal-overlay');
+                            const nameInput = document.getElementById('edit-name');
+                            const descInput = document.getElementById('edit-desc');
+                            const priceInput = document.getElementById('edit-price');
+                            const energyInput = document.getElementById('edit-energy');
+
+                            if (!overlay || !nameInput || !descInput || !priceInput || !energyInput) return;
+
+                            updateId = item.id;
+                            nameInput.value = item.foodName;
+                            descInput.value = item.description;
+                            priceInput.value = item.price;
+                            energyInput.value = item.calories;
+
+                            overlay.classList.remove('modal-hidden');
+                        });
+
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.className = 'btn-del';
+                        deleteBtn.textContent = '🗑️ Sil';
+                        deleteBtn.addEventListener('click', () => deleteItem(item.id));
+
+                        btnGroup.appendChild(editBtn);
+                        btnGroup.appendChild(deleteBtn);
+                    } else {
+                        // Normal kullanıcı butonu + malzeme çıkarma popup'ı
+                        const addBtn = document.createElement('button');
+                        addBtn.className = 'btn-edit';
+                        addBtn.style.background = '#22c55e';
+                        addBtn.textContent = '🛒 Sepete Ekle';
+                        addBtn.addEventListener('click', () =>
+                            openIngredientModal(item)
+                        );
+
+                        btnGroup.appendChild(addBtn);
+                    }
+                }
+
+                container.appendChild(fragment);
+            });
         })
         .catch(err => {
             const container = document.getElementById('menu-listesi');
@@ -231,46 +336,6 @@ function filterMenu() {
     }
 }
 
-// Edit mode
-function setUpdateMode(id, name, desc, price, energy) {
-    updateId = id;
-    document.getElementById('yName').value = name;
-    document.getElementById('yDesc').value = desc;
-    document.getElementById('yPrice').value = price;
-    document.getElementById('yEnergy').value = energy;
-
-    document.getElementById('form-title').innerText = "✏️ Edit Item";
-    document.getElementById('btn-action').innerText = "UPDATE ITEM";
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-// Save/Update
-function handleAction() {
-    const payload = {
-        id: updateId || 0,
-        foodName: document.getElementById('yName').value,
-        description: document.getElementById('yDesc').value,
-        price: parseFloat(document.getElementById('yPrice').value),
-        calories: parseInt(document.getElementById('yEnergy').value),
-        isActive: true
-    };
-
-    const method = updateId ? 'PUT' : 'POST';
-    const url = updateId ? `/api/MenuDetail/${updateId}` : '/api/MenuDetail';
-
-    showLoader();
-
-    fetch(url, {
-        method: method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-    }).then(() => {
-        updateId = null;
-        location.reload();
-    }).finally(() => {
-        hideLoader();
-    });
-}
 
 // Delete
 function deleteItem(id) {

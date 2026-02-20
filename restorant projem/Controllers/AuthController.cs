@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using restorant_projem.Data;
 using restorant_projem;
+using restorant_projem.Models;
 
 namespace restorant_projem.Controllers;
 
@@ -11,18 +12,6 @@ public class AuthController : ControllerBase
 {
     private readonly AppDbContext _context;
     public AuthController(AppDbContext context) { _context = context; }
-
-    public class LoginRequest
-    {
-        public string Username { get; set; } = string.Empty;
-        public string Password { get; set; } = string.Empty;
-    }
-
-    public class RegisterRequest
-    {
-        public string Username { get; set; } = string.Empty;
-        public string Password { get; set; } = string.Empty;
-    }
 
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest loginUser)
@@ -105,11 +94,6 @@ public class AuthController : ControllerBase
         return Ok(users);
     }
 
-    public class UpdateRoleRequest
-    {
-        public string Role { get; set; } = string.Empty;
-    }
-
     // 🔐 Süperadmin panelinden rol güncelleme
     [HttpPut("{id}/role")]
     public async Task<IActionResult> UpdateRole(int id, [FromBody] UpdateRoleRequest request)
@@ -126,11 +110,6 @@ public class AuthController : ControllerBase
         user.Role = request.Role;
         await _context.SaveChangesAsync();
         return Ok(new { message = "Rol güncellendi." });
-    }
-
-    public class UpdatePasswordRequest
-    {
-        public string Password { get; set; } = string.Empty;
     }
 
     // Süperadmin için şifre güncelleme (reset)

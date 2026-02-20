@@ -18,25 +18,6 @@
     </nav>
 
     <div class="container">
-        <div class="admin-panel" id="admin-area">
-            <h3 id="form-title">➕ Yeni Ürün Ekle</h3>
-            <div class="form-row">
-                <input type="text" id="yName" placeholder="Yemek Adı">
-                <input type="text" id="yDesc" placeholder="Açıklama">
-                <input type="number" id="yPrice" placeholder="Fiyat">
-                <input type="number" id="yEnergy" placeholder="Kalori">
-                <button id="btn-action" onclick="handleAction()">SİSTEME KAYDET</button>
-            </div>
-        </div>
-
-        <!-- Sadece SuperAdmin'e görünecek kullanıcı rol yönetimi alanı -->
-        <div class="admin-panel" id="role-area" style="margin-top:20px; display:none;">
-            <h3>👤 Kullanıcı Rolleri</h3>
-            <div id="user-roles-content" style="overflow-x:auto; margin-top:10px; font-size:14px;">
-                Loading users...
-            </div>
-        </div>
-
         <div class="search-container" style="text-align:center; margin: 25px 0;">
             <input type="text" id="searchInput" onkeyup="filterMenu()" placeholder="🔍 Yemek adı ara..."
                    style="padding:12px; width:350px; border-radius:25px; border:1px solid #ddd; outline:none; font-size:16px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
@@ -44,6 +25,52 @@
 
         <h2 class="list-title">Menü Listesi</h2>
         <div id="menu-listesi" class="menu-grid">Menü yükleniyor...</div>
+
+        <!-- Menü kartı için HTML template (JS sadece dolduracak) -->
+        <template id="menu-card-template">
+            <div class="card">
+                <div class="card-image">
+                    <img src="" alt="">
+                </div>
+                <h3>🍔 <span class="card-name"></span></h3>
+                <p class="card-desc"></p>
+                <p class="price-text">💰 Fiyat: <span class="card-price"></span> TL</p>
+                <small class="card-cal">🔥 Kalori: <span class="card-cal-value"></span> kcal</small><br>
+                <small class="card-date" style="color: #888; font-size: 11px;">🗓️ Eklenme: <span class="card-date-value"></span></small>
+                <div class="btn-group"></div>
+            </div>
+        </template>
+    </div>
+
+    <!-- Ürün düzenleme popup (Admin için) -->
+    <div id="edit-modal-overlay" class="modal-overlay modal-hidden">
+        <div class="modal">
+            <h3>Ürünü Düzenle</h3>
+            <p>Ürün bilgilerini güncelle.</p>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+                <input type="text" id="edit-name" placeholder="Yemek Adı">
+                <input type="text" id="edit-desc" placeholder="Açıklama">
+                <input type="number" id="edit-price" placeholder="Fiyat">
+                <input type="number" id="edit-energy" placeholder="Kalori">
+            </div>
+            <div class="modal-actions">
+                <button id="edit-cancel" class="btn-secondary">Vazgeç</button>
+                <button id="edit-save" class="btn-edit">Kaydet</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Malzeme çıkarma popup (Sepete eklerken) -->
+    <div id="ingredient-modal-overlay" class="modal-overlay modal-hidden">
+        <div class="modal">
+            <h3 id="ingredient-title">Malzeme Çıkar</h3>
+            <p>İstemediğin malzemeleri işaretle, biz mutfağa not düşelim.</p>
+            <div id="ingredient-list"></div>
+            <div class="modal-actions">
+                <button id="ingredient-cancel" class="btn-secondary">Vazgeç</button>
+                <button id="ingredient-confirm" class="btn-edit" style="background:#22c55e;">Sepete Ekle</button>
+            </div>
+        </div>
     </div>
 
     <script src="js/common.js"></script>

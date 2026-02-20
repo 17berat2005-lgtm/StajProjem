@@ -16,9 +16,64 @@
     </nav>
 
     <div class="container">
-        <h2 class="list-title">Sipariş Özeti</h2>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h2 class="list-title" style="margin:0;">Sipariş Özeti</h2>
+            <button id="admin-menu-btn" style="display:none; padding:10px 20px; border:none; border-radius:999px; background:#3b82f6; color:white; font-weight:600; cursor:pointer;">
+                ➕ Admin Menü
+            </button>
+        </div>
+        <!-- Sadece SuperAdmin'e görünecek kullanıcı rol yönetimi alanı -->
+        <div class="admin-panel" id="role-area" style="margin-bottom:20px; display:none;">
+            <h3>👤 Kullanıcı Rolleri</h3>
+            <div id="user-roles-content" style="overflow-x:auto; margin-top:10px; font-size:14px;">
+                Loading users...
+            </div>
+        </div>
+
         <div id="cart-content" class="admin-panel">
-            Yükleniyor...
+            <p id="cart-empty-message">Sepetiniz boş.</p>
+
+            <div id="cart-table-wrapper" style="display:none;">
+                <table style="width:100%; border-collapse:collapse; font-size:14px;">
+                    <thead>
+                        <tr>
+                            <th style="text-align:left; padding:6px 4px;">Ürün</th>
+                            <th style="text-align:left; padding:6px 4px;">Adet</th>
+                            <th style="text-align:left; padding:6px 4px;">Birim Fiyat</th>
+                            <th style="text-align:left; padding:6px 4px;">Toplam</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="cart-body">
+                    </tbody>
+                </table>
+
+                <div style="margin-top:15px; display:flex; justify-content:space-between; align-items:center;">
+                    <strong>Genel Toplam: <span id="cart-total">0.00</span> TL</strong>
+                    <button id="order-btn" style="padding:10px 20px; border:none; border-radius:999px; background:#22c55e; color:white; font-weight:600; cursor:pointer;">
+                        Siparişi Tamamla
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Menü Popup (SuperAdmin için) -->
+    <div id="admin-menu-modal-overlay" class="modal-overlay modal-hidden">
+        <div class="modal" style="max-width:600px;">
+            <h3 id="admin-form-title">➕ Yeni Ürün Ekle</h3>
+            <div style="display:flex; flex-direction:column; gap:12px; margin-top:16px;">
+                <input type="text" id="admin-yName" placeholder="Yemek Adı" style="padding:10px 12px; border-radius:10px; border:1px solid #d1d5db; font-size:14px; outline:none;">
+                <input type="text" id="admin-yDesc" placeholder="Açıklama" style="padding:10px 12px; border-radius:10px; border:1px solid #d1d5db; font-size:14px; outline:none;">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                    <input type="number" id="admin-yPrice" placeholder="Fiyat" style="padding:10px 12px; border-radius:10px; border:1px solid #d1d5db; font-size:14px; outline:none;">
+                    <input type="number" id="admin-yEnergy" placeholder="Kalori" style="padding:10px 12px; border-radius:10px; border:1px solid #d1d5db; font-size:14px; outline:none;">
+                </div>
+            </div>
+            <div class="modal-actions" style="margin-top:20px;">
+                <button id="admin-menu-cancel" class="btn-secondary">Vazgeç</button>
+                <button id="admin-menu-save" class="btn-edit">Kaydet</button>
+            </div>
         </div>
     </div>
 

@@ -17,19 +17,6 @@ public class OrderController : ControllerBase
         _context = context;
     }
 
-    public class OrderItemDto
-    {
-        public int MenuDetailId { get; set; }
-        public int Quantity { get; set; }
-    }
-
-    public class CreateOrderRequest
-    {
-        public string Username { get; set; } = string.Empty;
-        public string? Notes { get; set; }
-        public List<OrderItemDto> Items { get; set; } = new();
-    }
-
     [HttpPost]
     public async Task<IActionResult> CreateOrder([FromBody] CreateOrderRequest request)
     {
