@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using restorant_projem.Data;
-using restorant_projem.Models;
+using restorant_projem;
 
 namespace restorant_projem.Controllers;
 
@@ -12,121 +12,140 @@ public class AuthController : ControllerBase
     private readonly AppDbContext _context;
     public AuthController(AppDbContext context) { _context = context; }
 
+    public class LoginRequest
+    {
+        public string Username { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+    }
+
+    public class RegisterRequest
+    {
+        public string Username { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+    }
+
     [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] User loginUser)
+    public async Task<IActionResult> Login([FromBody] LoginRequest loginUser)
     {
         var username = (loginUser.Username ?? string.Empty).Trim();
         var password = (loginUser.Password ?? string.Empty).Trim();
 
-        var user = await _context.Users
-            .FirstOrDefaultAsync(u =>
-                u.Username.ToLower() == username.ToLower() &&
-                u.Password == password);
+        if (string.IsNullOrWhiteSpace(username))
+            return BadRequest(new { message = "Kullanıcı adı zorunlu." });
 
-        if (user == null &&
-            username.Equals("superadmin", StringComparison.OrdinalIgnoreCase) &&
-            password == "1234")
-        {
-            user = new User
-            {
-                Username = "superadmin",
-                Password = "1234",
-                Role = "SuperAdmin",
-                CreatedDate = DateTime.Now
-            };
+        // Kullanıcı adı üzerinden tekil giriş mantığı:
+        // - Varsa şifreye hiç bakmadan içeri al.
+        // - Yoksa yeni kullanıcı oluştur (varsayılan User rolü, istersen özel isimlere farklı rol verebiliriz).
 
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-        }
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
 
         if (user == null)
         {
-            return Unauthorized(new { message = "Hatali giris!" });
+            var role = username.Equals("superadmin", StringComparison.OrdinalIgnoreCase)
+                ? "SuperAdmin"
+                : "User";
+
+            user = new User
+            {
+                Username = username,
+                Password = password,
+                Role = role,
+                CreatedDate = DateTime.Now
+            };
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+        }
+        else
+        {
+            // Eski kayıtları normalize et (trim) ve istersen yeni şifreyi kaydet.
+            user.Username = username;
+            if (!string.IsNullOrEmpty(password))
+            {
+                user.Password = password;
+            }
+            await _context.SaveChangesAsync();
         }
 
-        return Ok(new { user.ID, user.Username, user.Role });
+        return Ok(new { username = user.Username, role = user.Role });
     }
 
     [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody] User newUser)
+    public async Task<IActionResult> Register([FromBody] RegisterRequest newUser)
     {
-        if (await _context.Users.AnyAsync(u => u.Username == newUser.Username)) return BadRequest("Bu isim alinmis!");
-        newUser.Role = "User";
-        _context.Users.Add(newUser);
-        await _context.SaveChangesAsync();
-        return Ok(new { message = "Kayit basarili!" });
-    }
+        var username = (newUser.Username ?? string.Empty).Trim();
+        var password = (newUser.Password ?? string.Empty).Trim();
 
-    [HttpGet("profile/{id}")]
-    public async Task<IActionResult> GetProfile(int id)
-    {
-        var user = await _context.Users.FindAsync(id);
-        if (user == null) return NotFound();
+        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+            return BadRequest("Kullanıcı adı ve şifre zorunlu!");
 
-        return Ok(new
+        if (await _context.Users.AnyAsync(u => u.Username == username)) return BadRequest("Bu isim alınmış!");
+
+        var entity = new User
         {
-            user.ID,
-            user.Username,
-            user.Role,
-            user.CreatedDate,
-            user.Address,
-            user.Phone
-        });
-    }
+            Username = username,
+            Password = password,
+            Role = "User", // Yeni kayıt olan herkes normal kullanıcıdır
+            CreatedDate = DateTime.Now
+        };
 
-    public class UpdateProfileRequest
-    {
-        public string? Address { get; set; }
-        public string? Phone { get; set; }
-    }
-
-    [HttpPut("profile/{id}")]
-    public async Task<IActionResult> UpdateProfile(int id, [FromBody] UpdateProfileRequest request)
-    {
-        var user = await _context.Users.FindAsync(id);
-        if (user == null) return NotFound();
-
-        user.Address = request.Address;
-        user.Phone = request.Phone;
+        _context.Users.Add(entity);
         await _context.SaveChangesAsync();
-
-        return Ok(new
-        {
-            message = "Profil guncellendi.",
-            user.ID,
-            user.Address,
-            user.Phone
-        });
+        return Ok(new { message = "Kayıt başarılı!" });
     }
 
+    // 🔐 Sadece SuperAdmin arayüzünden kullanılacak: kullanıcıları listele
     [HttpGet("users")]
-    public async Task<ActionResult<IEnumerable<User>>> GetUsers()
+    public async Task<IActionResult> GetUsers()
     {
         var users = await _context.Users
             .OrderBy(u => u.Username)
+            .Select(u => new { id = u.ID, username = u.Username, role = u.Role })
             .ToListAsync();
 
         return Ok(users);
     }
 
-    [HttpPut("users/{id}/role")]
-    public async Task<IActionResult> UpdateUserRole(int id, [FromBody] UpdateRoleRequest request)
+    public class UpdateRoleRequest
+    {
+        public string Role { get; set; } = string.Empty;
+    }
+
+    // 🔐 Süperadmin panelinden rol güncelleme
+    [HttpPut("{id}/role")]
+    public async Task<IActionResult> UpdateRole(int id, [FromBody] UpdateRoleRequest request)
     {
         var user = await _context.Users.FindAsync(id);
         if (user == null) return NotFound();
 
         var allowedRoles = new[] { "User", "Admin", "SuperAdmin" };
         if (!allowedRoles.Contains(request.Role))
-            return BadRequest(new { message = "Gecersiz rol." });
+        {
+            return BadRequest("Geçersiz rol.");
+        }
 
         user.Role = request.Role;
         await _context.SaveChangesAsync();
-
-        return Ok(new { message = "Rol guncellendi.", user.Username, user.Role });
+        return Ok(new { message = "Rol güncellendi." });
     }
 
-    public class UpdateRoleRequest
+    public class UpdatePasswordRequest
     {
-        public string Role { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+    }
+
+    // Süperadmin için şifre güncelleme (reset)
+    [HttpPut("{id}/password")]
+    public async Task<IActionResult> UpdatePassword(int id, [FromBody] UpdatePasswordRequest request)
+    {
+        var user = await _context.Users.FindAsync(id);
+        if (user == null) return NotFound();
+
+        var newPass = (request.Password ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(newPass))
+            return BadRequest("Şifre boş olamaz.");
+
+        user.Password = newPass;
+        await _context.SaveChangesAsync();
+        return Ok(new { message = "Şifre güncellendi." });
     }
 }

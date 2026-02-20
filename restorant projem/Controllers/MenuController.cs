@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using restorant_projem.Data;
-using restorant_projem.Models;
+using restorant_projem;
 
 namespace restorant_projem.Controllers;
 

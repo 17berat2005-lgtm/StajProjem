@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Kanka Restoran | Sepet</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <h2>🛒 Sepetim</h2>
+        <div class="nav-actions">
+            <span id="user-display" style="color:white; margin-right:15px;"></span>
+            <button onclick="window.location.href='index.html'" class="btn-logout" style="background:#22c55e;">Menüye Dön</button>
+            <button onclick="logout()" class="btn-logout">Çıkış</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h2 class="list-title">Sipariş Özeti</h2>
+        <div id="cart-content" class="admin-panel">
+            Yükleniyor...
+        </div>
+    </div>
+
+    <script src="js/common.js"></script>
+    <script src="js/cart.js"></script>
+</body>
+</html>
+
+

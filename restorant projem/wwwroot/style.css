@@ -1,0 +1,268 @@
+/* Genel tema */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #f3f4fb;
+    color: #1f2933;
+}
+
+a {
+    text-decoration: none;
+}
+
+/* Üst navbar */
+.navbar {
+    height: 64px;
+    background: linear-gradient(90deg, #ff9f43, #ff6b6b);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 40px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+    color: #fff;
+}
+
+.navbar h2 {
+    margin: 0;
+    font-size: 22px;
+    letter-spacing: 0.5px;
+}
+
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-logout {
+    padding: 8px 18px;
+    border-radius: 50px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.btn-logout:hover {
+    background: rgba(255, 255, 255, 0.28);
+    transform: translateY(-1px);
+}
+
+/* Sayfa container */
+.container {
+    max-width: 1150px;
+    margin: 30px auto 40px;
+    padding: 0 20px 40px;
+}
+
+/* Admin panel form alanı */
+.admin-panel {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 20px 22px 18px;
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
+    border-top: 4px solid #22c55e;
+}
+
+.admin-panel h3 {
+    margin-top: 0;
+    margin-bottom: 14px;
+    font-size: 18px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) 140px;
+    gap: 10px;
+}
+
+.form-row input {
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid #d1d5db;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.form-row input:focus {
+    border-color: #22c55e;
+    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.25);
+}
+
+#btn-action {
+    border-radius: 999px;
+    border: none;
+    background: #22c55e;
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+}
+
+#btn-action:hover {
+    background: #16a34a;
+    box-shadow: 0 10px 18px rgba(34, 197, 94, 0.35);
+    transform: translateY(-1px);
+}
+
+/* Menü başlığı */
+.list-title {
+    text-align: center;
+    margin: 10px 0 20px;
+    font-size: 26px;
+}
+
+/* Menü kart grid yapısı */
+.menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 18px;
+}
+
+.card {
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 14px 16px 18px;
+    box-shadow: 0 14px 28px rgba(15, 23, 42, 0.06);
+    border-top: 4px solid #f97316;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.card-image {
+    width: 100%;
+    height: 140px;
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.card h3 {
+    margin: 0;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.card p {
+    margin: 0;
+    font-size: 14px;
+    color: #4b5563;
+}
+
+.price-text {
+    font-weight: 700;
+    color: #1d4ed8;
+    margin-top: 4px;
+}
+
+.card small {
+    font-size: 12px;
+}
+
+.btn-group {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.btn-edit,
+.btn-del {
+    padding: 7px 14px;
+    border-radius: 999px;
+    border: none;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-edit {
+    background: #3b82f6;
+    color: #fff;
+}
+
+.btn-edit:hover {
+    background: #2563eb;
+}
+
+.btn-del {
+    background: #ef4444;
+    color: #fff;
+}
+
+.btn-del:hover {
+    background: #dc2626;
+}
+
+/* Mobil uyum */
+@media (max-width: 768px) {
+    .navbar {
+        padding: 0 16px;
+    }
+
+    .form-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    #btn-action {
+        grid-column: 1 / -1;
+    }
+
+    .container {
+        padding: 0 14px 30px;
+    }
+}
+
+/* Global yükleme animasyonu */
+.loader-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    backdrop-filter: blur(1px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+}
+
+.loader-overlay.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.loader-spinner {
+    width: 56px;
+    height: 56px;
+    border-radius: 999px;
+    border: 5px solid rgba(255, 255, 255, 0.5);
+    border-top-color: #22c55e;
+    animation: spin 0.8s linear infinite;
+    box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.15);
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+
+

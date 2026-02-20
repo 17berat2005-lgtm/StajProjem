@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using restorant_projem.Data;
 using restorant_projem.Models;
 using System.Linq;
@@ -20,23 +19,7 @@ namespace restorant_projem.Controllers
         [HttpGet]
         public IActionResult GetMenu()
         {
-            var items = _context.MenuDetails
-                .Include(m => m.Category)
-                .Select(m => new
-                {
-                    m.Id,
-                    m.FoodName,
-                    m.Description,
-                    m.Price,
-                    m.Calories,
-                    m.IsActive,
-                    m.CreatedDate,
-                    m.CategoryId,
-                    CategoryName = m.Category != null ? m.Category.Name : null
-                })
-                .ToList();
-
-            return Ok(items);
+            return Ok(_context.MenuDetails.ToList());
         }
 
         [HttpPost]

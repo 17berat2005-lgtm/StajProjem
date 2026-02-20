@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using restorant_projem.Data;
+using restorant_projem;
 using restorant_projem.Models;
 
 namespace restorant_projem.Controllers;
@@ -16,244 +17,130 @@ public class OrderController : ControllerBase
         _context = context;
     }
 
-    [HttpPost("cart")]
-    public async Task<IActionResult> AddToCart([FromBody] CartRequest request)
+    public class OrderItemDto
     {
-        var menuItem = await _context.MenuDetails.FindAsync(request.MenuDetailId);
-        if (menuItem == null) return NotFound("Urun bulunamadi.");
+        public int MenuDetailId { get; set; }
+        public int Quantity { get; set; }
+    }
 
-        return Ok(new
-        {
-            MenuDetailId = menuItem.Id,
-            FoodName = menuItem.FoodName,
-            Price = menuItem.Price,
-            Quantity = request.Quantity,
-            SubTotal = menuItem.Price * request.Quantity
-        });
+    public class CreateOrderRequest
+    {
+        public string Username { get; set; } = string.Empty;
+        public string? Notes { get; set; }
+        public List<OrderItemDto> Items { get; set; } = new();
     }
 
     [HttpPost]
     public async Task<IActionResult> CreateOrder([FromBody] CreateOrderRequest request)
     {
-        var userId = request.UserId;
-        var user = await _context.Users.FindAsync(userId);
-        if (user == null) return NotFound("Kullanici bulunamadi.");
+        if (request.Items == null || request.Items.Count == 0)
+            return BadRequest("Sepet boş olamaz.");
+
+        var username = request.Username?.Trim();
+        if (string.IsNullOrWhiteSpace(username))
+            return BadRequest("Kullanıcı adı zorunlu.");
+
+        // Kullanıcıyı bul veya oluştur
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+        if (user == null)
+        {
+            user = new User
+            {
+                Username = username,
+                Password = "", // Şifre burada önemli değil, login endpoint'i zaten güncelliyor
+                Role = "User",
+                CreatedDate = DateTime.Now
+            };
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+        }
+
+        // İlgili menü kayıtlarını çek
+        var menuIds = request.Items.Select(i => i.MenuDetailId).Distinct().ToList();
+        var menuItems = await _context.MenuDetails
+            .Where(m => menuIds.Contains(m.Id))
+            .ToDictionaryAsync(m => m.Id, m => m);
+
+        if (menuItems.Count != menuIds.Count)
+            return BadRequest("Bazı ürünler menüde bulunamadı.");
 
         var order = new Order
         {
-            UserId = userId,
-            TotalAmount = request.TotalAmount,
-            Status = "Pending",
+            UserId = user.ID,
+            Status = "Yeni",
             Notes = request.Notes,
-            CreatedDate = DateTime.Now
+            CreatedDate = DateTime.Now,
+            TotalAmount = 0
         };
+
+        foreach (var item in request.Items)
+        {
+            var menu = menuItems[item.MenuDetailId];
+            var quantity = item.Quantity <= 0 ? 1 : item.Quantity;
+
+            var orderItem = new OrderItem
+            {
+                MenuDetailId = menu.Id,
+                Quantity = quantity,
+                UnitPrice = menu.Price,
+                SubTotal = menu.Price * quantity
+            };
+
+            order.TotalAmount += orderItem.SubTotal;
+            order.OrderItems.Add(orderItem);
+        }
 
         _context.Orders.Add(order);
         await _context.SaveChangesAsync();
 
-        foreach (var item in request.Items)
+        return Ok(new
         {
-            var menuItem = await _context.MenuDetails.FindAsync(item.MenuDetailId);
-            if (menuItem == null) continue;
-
-            var orderItem = new OrderItem
+            order.Id,
+            order.TotalAmount,
+            order.Status,
+            order.CreatedDate,
+            Items = order.OrderItems.Select(oi => new
             {
-                OrderId = order.Id,
-                MenuDetailId = item.MenuDetailId,
-                Quantity = item.Quantity,
-                UnitPrice = menuItem.Price,
-                SubTotal = menuItem.Price * item.Quantity
-            };
-
-            _context.OrderItems.Add(orderItem);
-        }
-
-        await _context.SaveChangesAsync();
-
-        return Ok(new { message = "Siparis olusturuldu.", orderId = order.Id });
-    }
-
-    [HttpGet("user/{userId}")]
-    public async Task<ActionResult<IEnumerable<object>>> GetUserOrders(int userId)
-    {
-        var orders = await _context.Orders
-            .Where(o => o.UserId == userId)
-            .Include(o => o.OrderItems)
-                .ThenInclude(oi => oi.MenuDetail)
-            .OrderByDescending(o => o.CreatedDate)
-            .ToListAsync();
-
-        var result = orders.Select(o => new
-        {
-            o.Id,
-            o.TotalAmount,
-            o.Status,
-            o.CreatedDate,
-            o.Notes,
-            Items = o.OrderItems?.Select(oi => new
-            {
-                oi.MenuDetail?.FoodName,
+                oi.MenuDetailId,
+                Name = menuItems[oi.MenuDetailId].FoodName,
                 oi.Quantity,
                 oi.UnitPrice,
                 oi.SubTotal
-            }).ToList()
-        });
-
-        return Ok(result);
-    }
-
-    [HttpGet("admin/all")]
-    public async Task<ActionResult<IEnumerable<object>>> GetAllOrders()
-    {
-        var orders = await _context.Orders
-            .Include(o => o.User)
-            .Include(o => o.OrderItems)
-                .ThenInclude(oi => oi.MenuDetail)
-            .OrderByDescending(o => o.CreatedDate)
-            .ToListAsync();
-
-        var result = orders.Select(o => new
-        {
-            o.Id,
-            UserName = o.User?.Username,
-            o.TotalAmount,
-            o.Status,
-            o.CreatedDate,
-            o.Notes,
-            Items = o.OrderItems?.Select(oi => new
-            {
-                oi.MenuDetail?.FoodName,
-                oi.Quantity,
-                oi.UnitPrice,
-                oi.SubTotal
-            }).ToList()
-        });
-
-        return Ok(result);
-    }
-
-    [HttpGet("admin/stats")]
-    public async Task<IActionResult> GetStats()
-    {
-        var now = DateTime.Now;
-        var today = now.Date;
-        var last7Start = today.AddDays(-6);
-        var last30Start = today.AddDays(-29);
-
-        var allOrders = await _context.Orders.ToListAsync();
-
-        var totalOrders = allOrders.Count;
-        var totalRevenue = allOrders.Sum(o => o.TotalAmount);
-        var todayOrders = allOrders.Count(o => o.CreatedDate.Date == today);
-        var todayRevenue = allOrders.Where(o => o.CreatedDate.Date == today).Sum(o => o.TotalAmount);
-        var last30Orders = allOrders.Count(o => o.CreatedDate.Date >= last30Start);
-
-        var dailyQuery = await _context.Orders
-            .Where(o => o.CreatedDate.Date >= last7Start)
-            .GroupBy(o => o.CreatedDate.Date)
-            .Select(g => new
-            {
-                Date = g.Key,
-                TotalAmount = g.Sum(x => x.TotalAmount),
-                Count = g.Count()
             })
-            .ToListAsync();
+        });
+    }
 
-        var dailySales = Enumerable.Range(0, 7)
-            .Select(offset =>
+    // Belirli kullanıcının geçmiş siparişleri
+    [HttpGet("user/{username}")]
+    public async Task<IActionResult> GetOrdersByUser(string username)
+    {
+        if (string.IsNullOrWhiteSpace(username))
+            return BadRequest("Kullanıcı adı zorunlu.");
+
+        var orders = await _context.Orders
+            .Include(o => o.OrderItems)
+            .Where(o => o.User.Username == username)
+            .OrderByDescending(o => o.CreatedDate)
+            .Select(o => new
             {
-                var d = last7Start.AddDays(offset);
-                var found = dailyQuery.FirstOrDefault(x => x.Date == d);
-                return new
+                o.Id,
+                o.TotalAmount,
+                o.Status,
+                o.CreatedDate,
+                o.Notes,
+                Items = o.OrderItems.Select(oi => new
                 {
-                    Date = d,
-                    TotalAmount = found?.TotalAmount ?? 0m,
-                    Count = found?.Count ?? 0
-                };
-            }).ToList();
-
-        var topItems = await _context.OrderItems
-            .Include(oi => oi.MenuDetail)
-            .GroupBy(oi => oi.MenuDetailId)
-            .Select(g => new
-            {
-                MenuDetailId = g.Key,
-                FoodName = g.First().MenuDetail != null ? g.First().MenuDetail.FoodName : "Bilinmeyen",
-                Quantity = g.Sum(x => x.Quantity),
-                Revenue = g.Sum(x => x.SubTotal)
+                    oi.MenuDetailId,
+                    Name = _context.MenuDetails.FirstOrDefault(m => m.Id == oi.MenuDetailId)!.FoodName,
+                    oi.Quantity,
+                    oi.UnitPrice,
+                    oi.SubTotal
+                })
             })
-            .OrderByDescending(x => x.Quantity)
-            .Take(5)
             .ToListAsync();
 
-        var response = new
-        {
-            TotalOrders = totalOrders,
-            TotalRevenue = totalRevenue,
-            TodayOrders = todayOrders,
-            TodayRevenue = todayRevenue,
-            Last30DaysOrders = last30Orders,
-            DailySales = dailySales,
-            TopItems = topItems
-        };
-
-        return Ok(response);
-    }
-
-    [HttpPut("{orderId}/status")]
-    public async Task<IActionResult> UpdateOrderStatus(int orderId, [FromBody] UpdateStatusRequest request)
-    {
-        var order = await _context.Orders.FindAsync(orderId);
-        if (order == null) return NotFound("Siparis bulunamadi.");
-
-        order.Status = request.Status;
-        await _context.SaveChangesAsync();
-
-        return Ok(new { message = "Siparis durumu guncellendi.", order.Status });
-    }
-
-    [HttpDelete("{orderId}")]
-    public async Task<IActionResult> CancelOrder(int orderId)
-    {
-        var order = await _context.Orders
-            .Include(o => o.OrderItems)
-            .FirstOrDefaultAsync(o => o.Id == orderId);
-
-        if (order == null) return NotFound("Siparis bulunamadi.");
-
-        _context.OrderItems.RemoveRange(order.OrderItems ?? new List<OrderItem>());
-        _context.Orders.Remove(order);
-        await _context.SaveChangesAsync();
-
-        return Ok(new { message = "Siparis iptal edildi." });
+        return Ok(orders);
     }
 }
-
-public class CartRequest
-{
-    public int MenuDetailId { get; set; }
-    public int Quantity { get; set; }
-}
-
-public class CreateOrderRequest
-{
-    public int UserId { get; set; }
-    public decimal TotalAmount { get; set; }
-    public string? Notes { get; set; }
-    public List<OrderItemRequest> Items { get; set; } = new();
-}
-
-public class OrderItemRequest
-{
-    public int MenuDetailId { get; set; }
-    public int Quantity { get; set; }
-}
-
-public class UpdateStatusRequest
-{
-    public string Status { get; set; } = string.Empty;
-}
-
-
 
 
