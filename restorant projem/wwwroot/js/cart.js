@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     wireAdminMenuModalEvents();
     renderCart();
+    loadOrdersForCurrentUser();
 });
 
 function logout() {
@@ -165,12 +166,84 @@ function submitOrder() {
         tableWrapper.style.display = 'none';
         emptyMessage.style.display = 'block';
         emptyMessage.textContent = `Siparişiniz oluşturuldu. Numaranız: #${order.id} - Toplam: ${order.totalAmount} TL`;
+        
+        // Siparişler listesini tazele
+        loadOrdersForCurrentUser();
     }).catch(err => {
         alert(err.message || 'Sipariş sırasında hata oluştu.');
         if (btn) btn.disabled = false;
     }).finally(() => {
         hideLoader();
     });
+}
+
+// Mevcut kullanıcı / süperadmin için sipariş listesini yükle
+function loadOrdersForCurrentUser() {
+    const section = document.getElementById('orders-section');
+    const title = document.getElementById('orders-title');
+    const tbody = document.getElementById('orders-body');
+
+    if (!section || !title || !tbody) return;
+
+    let url;
+
+    if (userRole === 'SuperAdmin' || userRole === 'Admin') {
+        // Yönetici tüm siparişleri görsün
+        url = '/api/Order';
+        title.textContent = 'Tüm Siparişler';
+    } else {
+        // Normal kullanıcı sadece kendi siparişlerini görsün
+        url = `/api/Order/user/${encodeURIComponent(userName)}`;
+        title.textContent = 'Geçmiş Siparişlerim';
+    }
+
+    showLoader();
+
+    fetch(url)
+        .then(res => {
+            if (!res.ok) throw new Error('Siparişler yüklenemedi');
+            return res.json();
+        })
+        .then(orders => {
+            tbody.innerHTML = '';
+
+            if (!orders || !orders.length) {
+                section.style.display = 'none';
+                return;
+            }
+
+            section.style.display = 'block';
+
+            orders.forEach(o => {
+                const tr = document.createElement('tr');
+
+                const userDisplayName = o.userName || userName;
+                const created = o.createdDate
+                    ? new Date(o.createdDate).toLocaleString('tr-TR')
+                    : '';
+
+                const itemsText = (o.items || [])
+                    .map(i => `${i.name} x${i.quantity}`)
+                    .join(', ');
+
+                tr.innerHTML = `
+                    <td style="padding:4px 4px;">#${o.id}</td>
+                    <td style="padding:4px 4px;">${userDisplayName}</td>
+                    <td style="padding:4px 4px;">${created}</td>
+                    <td style="padding:4px 4px;">${o.status}</td>
+                    <td style="padding:4px 4px;">${o.totalAmount} TL</td>
+                    <td style="padding:4px 4px;">${itemsText}</td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+        })
+        .catch(() => {
+            section.style.display = 'none';
+        })
+        .finally(() => {
+            hideLoader();
+        });
 }
 
 // Admin Menü Popup'ı aç

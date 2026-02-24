@@ -17,6 +17,36 @@ public class OrderController : ControllerBase
         _context = context;
     }
 
+        // Tüm siparişleri (SuperAdmin / Admin için) listele
+        [HttpGet]
+        public async Task<IActionResult> GetAllOrders()
+        {
+            var orders = await _context.Orders
+                .Include(o => o.OrderItems)
+                .Include(o => o.User)
+                .OrderByDescending(o => o.CreatedDate)
+                .Select(o => new
+                {
+                    o.Id,
+                    UserName = o.User.Username,
+                    o.TotalAmount,
+                    o.Status,
+                    o.CreatedDate,
+                    o.Notes,
+                    Items = o.OrderItems.Select(oi => new
+                    {
+                        oi.MenuDetailId,
+                        Name = _context.MenuDetails.FirstOrDefault(m => m.Id == oi.MenuDetailId)!.FoodName,
+                        oi.Quantity,
+                        oi.UnitPrice,
+                        oi.SubTotal
+                    })
+                })
+                .ToListAsync();
+
+            return Ok(orders);
+        }
+
     [HttpPost]
     public async Task<IActionResult> CreateOrder([FromBody] CreateOrderRequest request)
     {

@@ -329,10 +329,23 @@ function loadMenu() {
 function filterMenu() {
     let input = document.getElementById('searchInput').value.toLowerCase();
     let cards = document.getElementsByClassName('card');
+    let visibleCount = 0;
 
     for (let i = 0; i < cards.length; i++) {
         let foodName = cards[i].getElementsByTagName('h3')[0].innerText.toLowerCase();
-        cards[i].style.display = foodName.includes(input) ? "" : "none";
+        const isMatch = foodName.includes(input);
+        cards[i].style.display = isMatch ? "" : "none";
+        if (isMatch) visibleCount++;
+    }
+
+    // Sadece tek ürün kaldığında grid'i ortalamak için özel sınıf ekle
+    const container = document.getElementById('menu-listesi');
+    if (container) {
+        if (visibleCount === 1) {
+            container.classList.add('single-result');
+        } else {
+            container.classList.remove('single-result');
+        }
     }
 }
 

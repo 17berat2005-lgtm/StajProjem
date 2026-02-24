@@ -25,9 +25,45 @@ namespace restorant_projem.Controllers
         [HttpPost]
         public IActionResult AddMenu([FromBody] MenuDetail item)
         {
+            // Yeni kayıt için oluşturulma tarihini set et
+            if (item.CreatedDate == default)
+            {
+                item.CreatedDate = DateTime.Now;
+            }
+
             _context.MenuDetails.Add(item);
             _context.SaveChanges();
-            return Ok();
+
+            // Frontend POST sonrası JSON beklediği için, eklenen kaydı geri döndürüyoruz
+            return Ok(item);
+        }
+
+        [HttpPut("{id}")]
+        public IActionResult UpdateMenu(int id, [FromBody] MenuDetail item)
+        {
+            if (id != item.Id && item.Id != 0)
+            {
+                return BadRequest("Id uyuşmuyor.");
+            }
+
+            var existing = _context.MenuDetails.Find(id);
+            if (existing == null)
+            {
+                return NotFound();
+            }
+
+            existing.FoodName = item.FoodName;
+            existing.Description = item.Description;
+            existing.Price = item.Price;
+            existing.Calories = item.Calories;
+            existing.IsActive = item.IsActive;
+
+            // CreatedDate'i koru; gönderildiyse ve boşsa mevcut değeri silme
+
+            _context.SaveChanges();
+
+            // Güncellenmiş kaydı geri gönder
+            return Ok(existing);
         }
 
         [HttpDelete("{id}")]

@@ -124,6 +124,14 @@ a {
     gap: 18px;
 }
 
+/* Arama filtresinde sadece 1 ürün kaldığında kartı daha dar ve ortalı göster */
+.menu-grid.single-result {
+    grid-template-columns: minmax(260px, 420px);
+    justify-content: center;
+    max-width: 440px;
+    margin: 0 auto;
+}
+
 .card {
     background: #ffffff;
     border-radius: 18px;
