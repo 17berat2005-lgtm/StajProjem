@@ -9,8 +9,8 @@
     <nav class="navbar">
         <h2>🛒 Sepetim</h2>
         <div class="nav-actions">
-            <span id="user-display" style="color:white; margin-right:15px;"></span>
-            <button onclick="window.location.href='index.html'" class="btn-logout" style="background:#22c55e;">Menüye Dön</button>
+            <span id="user-display" class="nav-user-text"></span>
+            <button onclick="window.location.href='index.html'" class="btn-logout btn-cart">Menüye Dön</button>
             <button onclick="logout()" class="btn-logout">Çıkış</button>
         </div>
     </nav>
@@ -98,8 +98,28 @@
         </div>
     </div>
 
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <div class="footer-col">
+                <h4>Kanka Restoran</h4>
+                <p>Sipariş özetini kontrol et, geçmiş siparişlerini incele.</p>
+            </div>
+            <div class="footer-col">
+                <h4>İletişim</h4>
+                <p>Adres: Örnek Cad. No:10, İstanbul</p>
+                <p>Tel: 0 (212) 000 00 00</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span>© <span id="footer-year-cart"></span> Kanka Restoran.</span>
+        </div>
+    </footer>
+
     <script src="js/common.js"></script>
     <script src="js/cart.js"></script>
+    <script>
+        document.getElementById('footer-year-cart').textContent = new Date().getFullYear();
+    </script>
 </body>
 </html>
 

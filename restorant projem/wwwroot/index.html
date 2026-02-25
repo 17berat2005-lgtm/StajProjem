@@ -11,21 +11,73 @@
     <nav class="navbar">
         <h2 id="main-title">🔥 Kanka Restoran</h2>
         <div class="nav-actions">
-            <span id="user-display" style="color: white; margin-right: 15px;"></span>
-            <button onclick="goCart()" class="btn-logout" style="background:#f97316; margin-right:8px;">Sepet</button>
+            <span id="user-display" class="nav-user-text"></span>
+            <button onclick="goCart()" class="btn-logout btn-cart">Sepet</button>
             <button onclick="logout()" class="btn-logout">Çıkış</button>
         </div>
     </nav>
 
-    <div class="container">
-        <div class="search-container" style="text-align:center; margin: 25px 0;">
-            <input type="text" id="searchInput" onkeyup="filterMenu()" placeholder="🔍 Yemek adı ara..."
-                   style="padding:12px; width:350px; border-radius:25px; border:1px solid #ddd; outline:none; font-size:16px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+    <!-- HERO ALANI -->
+    <section class="hero">
+        <div class="hero-inner">
+            <div class="hero-text">
+                <h1>Kanka Restoran</h1>
+                <p>Ustanın elinden, dumanı üstünde burgerler, pizzalar ve daha fazlası. Online sipariş ver, masanda hazır olsun.</p>
+                <div class="hero-actions">
+                    <button class="hero-primary-btn" onclick="document.getElementById('menu-section').scrollIntoView({ behavior: 'smooth' });">
+                        Hemen Sipariş Ver
+                    </button>
+                    <button class="hero-secondary-btn" onclick="document.getElementById('about-section').scrollIntoView({ behavior: 'smooth' });">
+                        Neden Kanka?
+                    </button>
+                </div>
+            </div>
+            <div class="hero-badge">
+                <span class="hero-badge-title">Günün Menüsü</span>
+                <span class="hero-badge-desc">Seçili ürünlerde %20 indirim</span>
+            </div>
         </div>
+    </section>
 
-        <h2 class="list-title">Menü Listesi</h2>
-        <div id="menu-listesi" class="menu-grid">Menü yükleniyor...</div>
+    <div class="container">
+        <!-- HAKKIMIZDA / NEDEN BİZ -->
+        <section id="about-section" class="about">
+            <h2>Neden <span>Kanka Restoran?</span></h2>
+            <div class="about-grid">
+                <div class="about-card">
+                    <h3>⚡ Hızlı Servis</h3>
+                    <p>Siparişlerini mutfağa anında iletiyoruz, sıcak ve taze servis ediyoruz.</p>
+                </div>
+                <div class="about-card">
+                    <h3>🥩 Taze Ürünler</h3>
+                    <p>Her gün taze hazırlanan malzemelerle lezzetten ödün vermiyoruz.</p>
+                </div>
+                <div class="about-card">
+                    <h3>💸 Uygun Fiyat</h3>
+                    <p>Cep yakmayan menülerle müdavimlerimize özel avantajlar sunuyoruz.</p>
+                </div>
+            </div>
+        </section>
 
+        <!-- KATEGORİ FİLTRELERİ + ARAMA -->
+        <section id="menu-section" class="menu-section">
+            <div class="menu-header">
+                <h2 class="list-title">Menü Listesi</h2>
+                <div class="filter-row">
+                    <div class="filter-chips">
+                        <button class="chip chip-active" data-category="all" onclick="filterByCategory('all')">Tümü</button>
+                        <button class="chip" data-category="burger" onclick="filterByCategory('burger')">Burger</button>
+                        <button class="chip" data-category="pizza" onclick="filterByCategory('pizza')">Pizza</button>
+                        <button class="chip" data-category="icecek" onclick="filterByCategory('içecek')">İçecek</button>
+                    </div>
+                    <div class="search-container">
+                        <input type="text" id="searchInput" onkeyup="filterMenu()" placeholder="🔍 Yemek adı ara..." class="search-input">
+                    </div>
+                </div>
+            </div>
+
+            <div id="menu-listesi" class="menu-grid">Menü yükleniyor...</div>
+        </section>
         <!-- Menü kartı için HTML template (JS sadece dolduracak) -->
         <template id="menu-card-template">
             <div class="card">
@@ -73,7 +125,35 @@
         </div>
     </div>
 
+    <!-- FOOTER -->
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <div class="footer-col">
+                <h4>Kanka Restoran</h4>
+                <p>Mahalle'nin buluşma noktası. Lezzetli burgerler, pizzalar ve günlük menüler.</p>
+            </div>
+            <div class="footer-col">
+                <h4>İletişim</h4>
+                <p>Adres: Örnek Cad. No:10, İstanbul</p>
+                <p>Tel: 0 (212) 000 00 00</p>
+                <p>Çalışma Saatleri: 11:00 - 23:30</p>
+            </div>
+            <div class="footer-col">
+                <h4>Sosyal</h4>
+                <p>Instagram: @kankarestoran</p>
+                <p>WhatsApp: 0 (5xx) 000 00 00</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span>© <span id="footer-year"></span> Kanka Restoran. Tüm hakları saklıdır.</span>
+        </div>
+    </footer>
+
     <script src="js/common.js"></script>
     <script src="js/index.js"></script>
+    <script>
+        // Footer yılı
+        document.getElementById('footer-year').textContent = new Date().getFullYear();
+    </script>
 </body>
 </html>

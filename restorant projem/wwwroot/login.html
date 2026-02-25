@@ -1,57 +1,143 @@
-﻿<!DOCTYPE html>bu 
+﻿<!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kanka Restoran | Giriş</title>
     <style>
         body {
-            font-family: sans-serif;
-            background: #2c3e50;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: linear-gradient(135deg, #2c3e50, #34495e);
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
+            padding: 16px;
         }
 
         .box {
-            background: white;
-            padding: 40px;
-            border-radius: 15px;
-            width: 320px;
+            background: #ffffff;
+            padding: 32px 28px;
+            border-radius: 18px;
+            width: 100%;
+            max-width: 360px;
             text-align: center;
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.22);
+        }
+
+        .box h2 {
+            margin-top: 0;
+            margin-bottom: 8px;
+        }
+
+        .box p.subtitle {
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+
+        .box label {
+            display: block;
+            text-align: left;
+            font-size: 13px;
+            color: #555;
+            margin-top: 10px;
+            margin-bottom: 4px;
+            font-weight: 500;
         }
 
         input {
             width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            padding: 11px 12px;
+            border: 1px solid #dcdfe3;
+            border-radius: 8px;
             box-sizing: border-box;
+            font-size: 14px;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #f39c12;
+            box-shadow: 0 0 0 3px rgba(243, 156, 18, 0.25);
+            transform: translateY(-1px);
+        }
+
+        .error-text {
+            margin-top: 6px;
+            font-size: 13px;
+            color: #e11d48;
+            text-align: left;
+            min-height: 18px;
         }
 
         button {
             width: 100%;
             padding: 12px;
+            margin-top: 16px;
             background: #f39c12;
-            color: white;
+            color: #ffffff;
             border: none;
-            border-radius: 5px;
+            border-radius: 999px;
             cursor: pointer;
-            font-weight: bold;
-            width: 100%;
+            font-weight: 600;
+            font-size: 15px;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+            transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
+        }
+
+        button:hover {
+            background: #d68910;
+            box-shadow: 0 10px 25px rgba(243, 156, 18, 0.45);
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 5px 15px rgba(243, 156, 18, 0.35);
+        }
+
+        .register-link {
+            display: block;
+            margin-top: 18px;
+            color: #2c3e50;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .register-link span {
+            font-weight: 600;
+        }
+
+        .register-link:hover span {
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
     <div class="box">
         <h2>🍔 Giriş Yap</h2>
-        <input type="text" id="user" placeholder="Kullanıcı Adı">
-        <input type="password" id="pass" placeholder="Şifre">
-        <button onclick="login()">GİRİŞ YAP</button>
-        <a href="register.html" style="display:block; margin-top:15px; color:#2c3e50; text-decoration:none; font-size:14px;">Yeni misafir misin? Kayıt Ol</a>
+        <p class="subtitle">Rezervasyonlarını, siparişlerini ve favori lezzetlerini yönet.</p>
+
+        <form onsubmit="event.preventDefault(); login();">
+            <label for="user">Kullanıcı Adı</label>
+            <input type="text" id="user" placeholder="örn. kanka.musteri" autocomplete="username" required>
+
+            <label for="pass">Şifre</label>
+            <input type="password" id="pass" placeholder="Şifreni gir" autocomplete="current-password" required minlength="4">
+            <div id="login-error" class="error-text"></div>
+
+            <button type="submit">Giriş Yap</button>
+        </form>
+
+        <a class="register-link" href="register.html">
+            Yeni misafir misin? <span>Kayıt Ol</span>
+        </a>
     </div>
+
     <script src="js/common.js"></script>
     <script src="js/login.js"></script>
 </body>

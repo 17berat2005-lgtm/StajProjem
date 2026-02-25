@@ -25,7 +25,7 @@ namespace restorant_projem.Controllers
         [HttpPost]
         public IActionResult AddMenu([FromBody] MenuDetail item)
         {
-            // Yeni kayıt için oluşturulma tarihini set et
+           
             if (item.CreatedDate == default)
             {
                 item.CreatedDate = DateTime.Now;
@@ -34,7 +34,7 @@ namespace restorant_projem.Controllers
             _context.MenuDetails.Add(item);
             _context.SaveChanges();
 
-            // Frontend POST sonrası JSON beklediği için, eklenen kaydı geri döndürüyoruz
+          
             return Ok(item);
         }
 
@@ -58,11 +58,11 @@ namespace restorant_projem.Controllers
             existing.Calories = item.Calories;
             existing.IsActive = item.IsActive;
 
-            // CreatedDate'i koru; gönderildiyse ve boşsa mevcut değeri silme
+           
 
             _context.SaveChanges();
 
-            // Güncellenmiş kaydı geri gönder
+           
             return Ok(existing);
         }
 

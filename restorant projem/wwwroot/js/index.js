@@ -325,20 +325,37 @@ function loadMenu() {
         });
 }
 
-// Arama
-function filterMenu() {
-    let input = document.getElementById('searchInput').value.toLowerCase();
-    let cards = document.getElementsByClassName('card');
+// Arama + kategori filtresi
+let activeCategory = 'all';
+
+function applyFilters() {
+    const searchValue = (document.getElementById('searchInput')?.value || '').toLowerCase();
+    const cards = document.getElementsByClassName('card');
     let visibleCount = 0;
 
     for (let i = 0; i < cards.length; i++) {
-        let foodName = cards[i].getElementsByTagName('h3')[0].innerText.toLowerCase();
-        const isMatch = foodName.includes(input);
-        cards[i].style.display = isMatch ? "" : "none";
+        const card = cards[i];
+        const nameText = card.getElementsByTagName('h3')[0]?.innerText.toLowerCase() || '';
+
+        // Kategori mantığı: ürün adında ilgili kelime varsa eşleşme olarak kabul et
+        let categoryMatch = true;
+        if (activeCategory !== 'all') {
+            if (activeCategory === 'burger') {
+                categoryMatch = nameText.includes('burger') || nameText.includes('hamburger');
+            } else if (activeCategory === 'pizza') {
+                categoryMatch = nameText.includes('pizza');
+            } else if (activeCategory === 'içecek') {
+                categoryMatch = nameText.includes('cola') || nameText.includes('ayran') || nameText.includes('içecek') || nameText.includes('icecek');
+            }
+        }
+
+        const searchMatch = nameText.includes(searchValue);
+        const isMatch = categoryMatch && searchMatch;
+
+        card.style.display = isMatch ? "" : "none";
         if (isMatch) visibleCount++;
     }
 
-    // Sadece tek ürün kaldığında grid'i ortalamak için özel sınıf ekle
     const container = document.getElementById('menu-listesi');
     if (container) {
         if (visibleCount === 1) {
@@ -347,6 +364,26 @@ function filterMenu() {
             container.classList.remove('single-result');
         }
     }
+}
+
+function filterMenu() {
+    applyFilters();
+}
+
+function filterByCategory(category) {
+    activeCategory = category;
+
+    // Buton aktiflik durumunu güncelle
+    const chips = document.querySelectorAll('.chip');
+    chips.forEach(chip => {
+        if (chip.getAttribute('data-category') === category) {
+            chip.classList.add('chip-active');
+        } else {
+            chip.classList.remove('chip-active');
+        }
+    });
+
+    applyFilters();
 }
 
 

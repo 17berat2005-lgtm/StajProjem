@@ -22,9 +22,7 @@ public class AuthController : ControllerBase
         if (string.IsNullOrWhiteSpace(username))
             return BadRequest(new { message = "Kullanıcı adı zorunlu." });
 
-        // Kullanıcı adı üzerinden tekil giriş mantığı:
-        // - Varsa şifreye hiç bakmadan içeri al.
-        // - Yoksa yeni kullanıcı oluştur (varsayılan User rolü, istersen özel isimlere farklı rol verebiliriz).
+        
 
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
 
@@ -46,7 +44,7 @@ public class AuthController : ControllerBase
         }
         else
         {
-            // Eski kayıtları normalize et (trim) ve istersen yeni şifreyi kaydet.
+          
             user.Username = username;
             if (!string.IsNullOrEmpty(password))
             {
@@ -73,7 +71,7 @@ public class AuthController : ControllerBase
         {
             Username = username,
             Password = password,
-            Role = "User", // Yeni kayıt olan herkes normal kullanıcıdır
+            Role = "User", 
             CreatedDate = DateTime.Now
         };
 
@@ -82,7 +80,7 @@ public class AuthController : ControllerBase
         return Ok(new { message = "Kayıt başarılı!" });
     }
 
-    // 🔐 Sadece SuperAdmin arayüzünden kullanılacak: kullanıcıları listele
+   
     [HttpGet("users")]
     public async Task<IActionResult> GetUsers()
     {
@@ -94,7 +92,7 @@ public class AuthController : ControllerBase
         return Ok(users);
     }
 
-    // 🔐 Süperadmin panelinden rol güncelleme
+   
     [HttpPut("{id}/role")]
     public async Task<IActionResult> UpdateRole(int id, [FromBody] UpdateRoleRequest request)
     {
@@ -112,7 +110,7 @@ public class AuthController : ControllerBase
         return Ok(new { message = "Rol güncellendi." });
     }
 
-    // Süperadmin için şifre güncelleme (reset)
+  
     [HttpPut("{id}/password")]
     public async Task<IActionResult> UpdatePassword(int id, [FromBody] UpdatePasswordRequest request)
     {
