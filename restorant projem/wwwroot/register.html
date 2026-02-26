@@ -118,28 +118,33 @@
     </style>
 </head>
 <body>
+    <!-- Dil butonu -->
+    <button id="lang-toggle" style="position:fixed; top:16px; right:16px; padding:6px 12px; border-radius:999px; border:none; background:rgba(0,0,0,0.35); color:#fff; font-size:12px; cursor:pointer;" data-i18n="nav.lang">
+        TR / EN
+    </button>
     <div class="box">
-        <h2>📝 Kayıt Ol</h2>
-        <p class="subtitle">Kanka Restoran hesabını oluştur, siparişlerini kolayca yönet.</p>
+        <h2 data-i18n="register.title">📝 Kayıt Ol</h2>
+        <p class="subtitle" data-i18n="register.subtitle">Kanka Restoran hesabını oluştur, siparişlerini kolayca yönet.</p>
 
         <form onsubmit="event.preventDefault(); kayit();">
-            <label for="rUser">Kullanıcı Adı</label>
-            <input type="text" id="rUser" placeholder="örn. kanka.musteri" autocomplete="username">
+            <label for="rUser" data-i18n="register.usernameLabel">Kullanıcı Adı</label>
+            <input type="text" id="rUser" placeholder="örn. kanka.musteri" autocomplete="username" data-i18n-placeholder="register.usernamePlaceholder">
 
-            <label for="rPass">Şifre</label>
-            <input type="password" id="rPass" placeholder="En az 4 karakter" autocomplete="new-password">
+            <label for="rPass" data-i18n="register.passwordLabel">Şifre</label>
+            <input type="password" id="rPass" placeholder="En az 4 karakter" autocomplete="new-password" data-i18n-placeholder="register.passwordPlaceholder">
 
             <div id="register-error" class="error-text"></div>
 
-            <button type="submit">Hesap Oluştur</button>
+            <button type="submit" data-i18n="register.button">Hesap Oluştur</button>
         </form>
 
         <a class="login-link" href="login.html">
-            Zaten hesabın var mı? <span>Giriş Yap</span>
+            <span data-i18n="register.loginQuestion">Zaten hesabın var mı?</span>
+            <span data-i18n="register.loginLink">Giriş Yap</span>
         </a>
     </div>
 
-    <script src="js/common.js"></script>
-    <script src="js/register.js"></script>
+    <script src="js/common.js?v=2"></script>
+    <script src="js/register.js?v=2"></script>
 </body>
 </html>

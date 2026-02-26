@@ -118,27 +118,32 @@
     </style>
 </head>
 <body>
+    <!-- Dil butonu -->
+    <button id="lang-toggle" style="position:fixed; top:16px; right:16px; padding:6px 12px; border-radius:999px; border:none; background:rgba(0,0,0,0.35); color:#fff; font-size:12px; cursor:pointer;" data-i18n="nav.lang">
+        TR / EN
+    </button>
     <div class="box">
-        <h2>🍔 Giriş Yap</h2>
-        <p class="subtitle">Rezervasyonlarını, siparişlerini ve favori lezzetlerini yönet.</p>
+        <h2 data-i18n="login.title">🍔 Giriş Yap</h2>
+        <p class="subtitle" data-i18n="login.subtitle">Rezervasyonlarını, siparişlerini ve favori lezzetlerini yönet.</p>
 
         <form onsubmit="event.preventDefault(); login();">
-            <label for="user">Kullanıcı Adı</label>
-            <input type="text" id="user" placeholder="örn. kanka.musteri" autocomplete="username" required>
+            <label for="user" data-i18n="login.usernameLabel">Kullanıcı Adı</label>
+            <input type="text" id="user" placeholder="örn. kanka.musteri" autocomplete="username" required data-i18n-placeholder="login.usernamePlaceholder">
 
-            <label for="pass">Şifre</label>
-            <input type="password" id="pass" placeholder="Şifreni gir" autocomplete="current-password" required minlength="4">
+            <label for="pass" data-i18n="login.passwordLabel">Şifre</label>
+            <input type="password" id="pass" placeholder="Şifreni gir" autocomplete="current-password" required minlength="4" data-i18n-placeholder="login.passwordPlaceholder">
             <div id="login-error" class="error-text"></div>
 
-            <button type="submit">Giriş Yap</button>
+            <button type="submit" data-i18n="login.button">Giriş Yap</button>
         </form>
 
         <a class="register-link" href="register.html">
-            Yeni misafir misin? <span>Kayıt Ol</span>
+            <span data-i18n="login.registerQuestion">Yeni misafir misin?</span>
+            <span data-i18n="login.registerLink">Kayıt Ol</span>
         </a>
     </div>
 
-    <script src="js/common.js"></script>
-    <script src="js/login.js"></script>
+    <script src="js/common.js?v=2"></script>
+    <script src="js/login.js?v=2"></script>
 </body>
 </html>

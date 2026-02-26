@@ -201,6 +201,28 @@ a {
     color: #4b5563;
 }
 
+/* Harita bölümü */
+.map-section {
+    margin-bottom: 40px;
+}
+
+.map-section h2 {
+    text-align: center;
+    font-size: 22px;
+    margin-bottom: 12px;
+}
+
+.map-wrapper {
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 16px 32px rgba(15, 23, 42, 0.18);
+}
+
+#map {
+    width: 100%;
+    height: 320px;
+}
+
 /* Admin panel form alanı */
 .admin-panel {
     background: #ffffff;
@@ -609,5 +631,65 @@ a {
     border: 1px solid #d1d5db;
     margin: 3px;
     font-size: 12px;
+}
+
+/* Sepete ekleme animasyonu */
+.btn-cart-animated {
+    animation: cart-bounce 0.4s ease-out;
+}
+
+@keyframes cart-bounce {
+    0% {
+        transform: scale(1);
+    }
+    30% {
+        transform: scale(1.15) translateY(-1px);
+    }
+    60% {
+        transform: scale(0.95);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.cart-added-toast {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    padding: 9px 16px;
+    border-radius: 999px;
+    background: #22c55e;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: 0 12px 28px rgba(22, 163, 74, 0.45);
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+    animation: cart-toast-in 0.22s ease-out forwards, cart-toast-out 0.28s ease-in forwards;
+    animation-delay: 0s, 1.8s;
+    z-index: 11000;
+}
+
+@keyframes cart-toast-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes cart-toast-out {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(10px) scale(0.97);
+    }
 }
 

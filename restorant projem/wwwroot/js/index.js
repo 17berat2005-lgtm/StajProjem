@@ -76,7 +76,10 @@ function addToCart(item) {
         cart.push({ ...item, quantity: 1 });
     }
     saveCart(cart);
-    alert('Ürün sepete eklendi.');
+    // Eski alert yerine animasyonlu bildirim
+    if (typeof showCartAddAnimation === 'function') {
+        showCartAddAnimation();
+    }
 }
 
 // Ürün düzenleme popup'ı bağlama

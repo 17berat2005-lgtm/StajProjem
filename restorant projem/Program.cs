@@ -15,9 +15,31 @@ builder.Services.AddOpenApi();
 builder.Services.AddCors(options => {
     options.AddPolicy("AllowAll", builder => builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 });
-// ... builder.Build'den �nce
 var app = builder.Build();
 app.UseStaticFiles(); // Bu komut, wwwroot i�indeki index.html'i internete a�ar!
+
+// Uygulama ayağa kalkarken Order tablosunda Rating/Review/RatedAt kolonları yoksa ekle
+using (var scope = app.Services.CreateScope())
+{
+    try
+    {
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        db.Database.ExecuteSqlRaw(@"
+IF COL_LENGTH('Orders', 'Rating') IS NULL
+    ALTER TABLE Orders ADD Rating INT NULL;
+
+IF COL_LENGTH('Orders', 'Review') IS NULL
+    ALTER TABLE Orders ADD Review NVARCHAR(MAX) NULL;
+
+IF COL_LENGTH('Orders', 'RatedAt') IS NULL
+    ALTER TABLE Orders ADD RatedAt DATETIME2 NULL;
+");
+    }
+    catch
+    {
+        // Burada hata olursa uygulamayı durdurmuyoruz; sadece kolon ekleme başarısız olur.
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

@@ -17,35 +17,38 @@ public class OrderController : ControllerBase
         _context = context;
     }
 
-        // Tüm siparişleri (SuperAdmin / Admin için) listele
-        [HttpGet]
-        public async Task<IActionResult> GetAllOrders()
-        {
-            var orders = await _context.Orders
-                .Include(o => o.OrderItems)
-                .Include(o => o.User)
-                .OrderByDescending(o => o.CreatedDate)
-                .Select(o => new
+    // Tüm siparişleri (SuperAdmin / Admin için) listele
+    [HttpGet]
+    public async Task<IActionResult> GetAllOrders()
+    {
+        var orders = await _context.Orders
+            .Include(o => o.OrderItems)
+            .Include(o => o.User)
+            .OrderByDescending(o => o.CreatedDate)
+            .Select(o => new
+            {
+                o.Id,
+                UserName = o.User.Username,
+                o.TotalAmount,
+                o.Status,
+                o.CreatedDate,
+                o.Notes,
+                o.Rating,
+                o.Review,
+                o.RatedAt,
+                Items = o.OrderItems.Select(oi => new
                 {
-                    o.Id,
-                    UserName = o.User.Username,
-                    o.TotalAmount,
-                    o.Status,
-                    o.CreatedDate,
-                    o.Notes,
-                    Items = o.OrderItems.Select(oi => new
-                    {
-                        oi.MenuDetailId,
-                        Name = _context.MenuDetails.FirstOrDefault(m => m.Id == oi.MenuDetailId)!.FoodName,
-                        oi.Quantity,
-                        oi.UnitPrice,
-                        oi.SubTotal
-                    })
+                    oi.MenuDetailId,
+                    Name = _context.MenuDetails.FirstOrDefault(m => m.Id == oi.MenuDetailId)!.FoodName,
+                    oi.Quantity,
+                    oi.UnitPrice,
+                    oi.SubTotal
                 })
-                .ToListAsync();
+            })
+            .ToListAsync();
 
-            return Ok(orders);
-        }
+        return Ok(orders);
+    }
 
     [HttpPost]
     public async Task<IActionResult> CreateOrder([FromBody] CreateOrderRequest request)
@@ -145,6 +148,9 @@ public class OrderController : ControllerBase
                 o.Status,
                 o.CreatedDate,
                 o.Notes,
+                o.Rating,
+                o.Review,
+                o.RatedAt,
                 Items = o.OrderItems.Select(oi => new
                 {
                     oi.MenuDetailId,
@@ -158,6 +164,53 @@ public class OrderController : ControllerBase
 
         return Ok(orders);
     }
+
+    // Siparişe değerlendirme ekleme / güncelleme
+    [HttpPost("{orderId}/rating")]
+    public async Task<IActionResult> RateOrder(int orderId, [FromBody] RateOrderRequest request)
+    {
+        if (request == null)
+            return BadRequest("Geçersiz istek.");
+
+        if (request.Rating < 1 || request.Rating > 5)
+            return BadRequest("Puan 1 ile 5 arasında olmalıdır.");
+
+        var order = await _context.Orders
+            .Include(o => o.User)
+            .FirstOrDefaultAsync(o => o.Id == orderId);
+
+        if (order == null)
+            return NotFound("Sipariş bulunamadı.");
+
+        // Basit güvenlik: kullanıcı adı eşleşmesi (JWT olmadığı için)
+        var username = (request.Username ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(username) || !string.Equals(order.User.Username, username, StringComparison.OrdinalIgnoreCase))
+        {
+            return BadRequest("Bu siparişi sadece sahibi değerlendirebilir.");
+        }
+
+        order.Rating = request.Rating;
+        order.Review = request.Review;
+        order.RatedAt = DateTime.Now;
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            order.Id,
+            order.Rating,
+            order.Review,
+            order.RatedAt
+        });
+    }
 }
+
+public class RateOrderRequest
+{
+    public string Username { get; set; } = string.Empty;
+    public int Rating { get; set; }
+    public string? Review { get; set; }
+}
+
 
 

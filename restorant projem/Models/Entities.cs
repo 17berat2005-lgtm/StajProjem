@@ -80,6 +80,16 @@ namespace restorant_projem
 
         public DateTime CreatedDate { get; set; }
 
+        // Müşteri değerlendirmesi
+        // 1-5 arası puan, boş ise henüz değerlendirilmemiş demektir.
+        public int? Rating { get; set; }
+
+        // Müşteri yorumu (opsiyonel)
+        public string? Review { get; set; }
+
+        // Değerlendirme tarihi (opsiyonel)
+        public DateTime? RatedAt { get; set; }
+
         public int UserId { get; set; }
         public User User { get; set; } = null!;
 

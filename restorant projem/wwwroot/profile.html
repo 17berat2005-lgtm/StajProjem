@@ -8,28 +8,29 @@
 </head>
 <body>
     <nav class="navbar">
-        <h2>👤 Profilim</h2>
+        <h2 data-i18n="profile.navTitle">👤 Profilim</h2>
         <div class="nav-actions">
             <span id="user-display" class="nav-user-text"></span>
-            <button onclick="window.location.href='index.html'" class="btn-logout btn-cart">Menü</button>
-            <button onclick="goOrders()" class="btn-logout" style="background:rgba(34,197,94,0.85);">Siparişlerim</button>
-            <button onclick="logout()" class="btn-logout">Çıkış</button>
+            <button onclick="window.location.href='index.html'" class="btn-logout btn-cart" data-i18n="profile.menuButton">Menü</button>
+            <button onclick="goOrders()" class="btn-logout" style="background:rgba(34,197,94,0.85);" data-i18n="profile.ordersButton">Siparişlerim</button>
+            <button id="lang-toggle" class="btn-logout" data-i18n="nav.lang">TR / EN</button>
+            <button onclick="logout()" class="btn-logout" data-i18n="profile.logout">Çıkış</button>
         </div>
     </nav>
 
     <div class="container">
         <div class="admin-panel" style="margin-bottom:20px;">
-            <h3>Hoş geldin, <span id="profile-name">Misafir</span> 👋</h3>
-            <p style="font-size:14px; color:#4b5563; margin-top:6px;">
+            <h3><span data-i18n="profile.welcomeTitle">Hoş geldin,</span> <span id="profile-name">Misafir</span> 👋</h3>
+            <p style="font-size:14px; color:#4b5563; margin-top:6px;" data-i18n="profile.welcomeText">
                 Buradan temel bilgilerini görebilir, sepetine ve geçmiş siparişlerine hızlıca gidebilirsin.
             </p>
         </div>
 
         <div class="admin-panel">
-            <h3>Hızlı Erişim</h3>
+            <h3 data-i18n="profile.quickAccess">Hızlı Erişim</h3>
             <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;">
-                <button onclick="window.location.href='index.html'" class="btn-edit" style="background:#f97316;">Menüye Git</button>
-                <button onclick="window.location.href='cart.html'" class="btn-edit" style="background:#22c55e;">Sepetim</button>
+                <button onclick="window.location.href='index.html'" class="btn-edit" style="background:#f97316;" data-i18n="profile.goMenu">Menüye Git</button>
+                <button onclick="window.location.href='cart.html'" class="btn-edit" style="background:#22c55e;" data-i18n="profile.goCart">Sepetim</button>
             </div>
         </div>
     </div>
@@ -37,16 +38,16 @@
     <footer class="site-footer">
         <div class="footer-inner">
             <div class="footer-col">
-                <h4>Kanka Restoran</h4>
-                <p>Profilinden sipariş geçmişine ve menüye her zaman ulaşabilirsin.</p>
+                <h4 data-i18n="footer.col1Title">Kanka Restoran</h4>
+                <p data-i18n="profile.footerText">Profilinden sipariş geçmişine ve menüye her zaman ulaşabilirsin.</p>
             </div>
         </div>
         <div class="footer-bottom">
-            <span>© <span id="footer-year-profile"></span> Kanka Restoran.</span>
+            <span>© <span id="footer-year-profile"></span> <span data-i18n="footer.bottom">Kanka Restoran. Tüm hakları saklıdır.</span></span>
         </div>
     </footer>
 
-    <script src="js/common.js"></script>
+    <script src="js/common.js?v=2"></script>
     <script>
         const nameFromStorage = localStorage.getItem('userName') || localStorage.getItem('username');
         const profileNameEl = document.getElementById('profile-name');

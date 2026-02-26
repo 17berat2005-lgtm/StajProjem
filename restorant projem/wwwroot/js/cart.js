@@ -3,6 +3,10 @@ const userRole = localStorage.getItem('userRole');
 
 let adminUpdateId = null;
 
+// Değerlendirilecek sipariş id'si ve mevcut veri
+let currentRatingOrderId = null;
+let currentRatingValue = 0;
+
 document.addEventListener('DOMContentLoaded', () => {
     const userDisplay = document.getElementById('user-display');
     if (userDisplay) {
@@ -190,11 +194,12 @@ function loadOrdersForCurrentUser() {
     if (userRole === 'SuperAdmin' || userRole === 'Admin') {
         // Yönetici tüm siparişleri görsün
         url = '/api/Order';
-        title.textContent = 'Tüm Siparişler';
+        // Başlık metni i18n ile yönetiliyor (common.js), burada sadece fallback bırakıyoruz
+        title.textContent = title.textContent || 'Tüm Siparişler';
     } else {
         // Normal kullanıcı sadece kendi siparişlerini görsün
         url = `/api/Order/user/${encodeURIComponent(userName)}`;
-        title.textContent = 'Geçmiş Siparişlerim';
+        title.textContent = title.textContent || 'Geçmiş Siparişlerim';
     }
 
     showLoader();
@@ -226,6 +231,12 @@ function loadOrdersForCurrentUser() {
                     .map(i => `${i.name} x${i.quantity}`)
                     .join(', ');
 
+                const canRate = (!o.rating || o.rating <= 0) && userRole !== 'SuperAdmin' && userRole !== 'Admin';
+
+                const ratingText = o.rating
+                    ? `${'★'.repeat(o.rating)}${'☆'.repeat(5 - o.rating)}${o.review ? ' - ' + o.review : ''}`
+                    : (canRate ? '<button class="btn-edit" style="padding:4px 10px; font-size:11px; background:#f59e0b;" data-rate-btn="1">' + (window.appLang === 'en' ? 'Rate' : 'Değerlendir') + '</button>' : (window.appLang === 'en' ? 'No rating yet' : 'Henüz yok'));
+
                 tr.innerHTML = `
                     <td style="padding:4px 4px;">#${o.id}</td>
                     <td style="padding:4px 4px;">${userDisplayName}</td>
@@ -233,7 +244,14 @@ function loadOrdersForCurrentUser() {
                     <td style="padding:4px 4px;">${o.status}</td>
                     <td style="padding:4px 4px;">${o.totalAmount} TL</td>
                     <td style="padding:4px 4px;">${itemsText}</td>
+                    <td style="padding:4px 4px;">${ratingText}</td>
                 `;
+
+                // Eğer buton varsa event bağla
+                const rateBtn = tr.querySelector('button[data-rate-btn]');
+                if (rateBtn) {
+                    rateBtn.addEventListener('click', () => openRatingModal(o));
+                }
 
                 tbody.appendChild(tr);
             });
@@ -245,6 +263,113 @@ function loadOrdersForCurrentUser() {
             hideLoader();
         });
 }
+
+// Değerlendirme popup'ını aç
+function openRatingModal(order) {
+    const overlay = document.getElementById('rating-modal-overlay');
+    const starsEl = document.getElementById('rating-stars');
+    const commentEl = document.getElementById('rating-comment');
+
+    if (!overlay || !starsEl || !commentEl) return;
+
+    currentRatingOrderId = order.id;
+    currentRatingValue = order.rating || 0;
+
+    // Mevcut değeri göster
+    updateStarDisplay(starsEl, currentRatingValue || 5); // varsayılan 5
+    commentEl.value = order.review || '';
+
+    // Yıldız click eventleri
+    starsEl.innerHTML = '★★★★★';
+    const stars = starsEl.innerText.split('');
+    starsEl.innerHTML = '';
+    stars.forEach((s, idx) => {
+        const span = document.createElement('span');
+        span.textContent = '★';
+        span.style.marginRight = '2px';
+        span.addEventListener('click', () => {
+            currentRatingValue = idx + 1;
+            updateStarDisplay(starsEl, currentRatingValue);
+        });
+        starsEl.appendChild(span);
+    });
+
+    overlay.classList.remove('modal-hidden');
+}
+
+function updateStarDisplay(container, value) {
+    const children = container.querySelectorAll('span');
+    if (!children.length) return;
+    children.forEach((span, idx) => {
+        span.style.color = idx < value ? '#f59e0b' : '#d1d5db';
+    });
+}
+
+// Değerlendirme popup eventleri
+document.addEventListener('DOMContentLoaded', () => {
+    const overlay = document.getElementById('rating-modal-overlay');
+    const cancelBtn = document.getElementById('rating-cancel');
+    const saveBtn = document.getElementById('rating-save');
+    const starsEl = document.getElementById('rating-stars');
+
+    if (overlay && cancelBtn) {
+        cancelBtn.addEventListener('click', () => {
+            overlay.classList.add('modal-hidden');
+            currentRatingOrderId = null;
+            currentRatingValue = 0;
+        });
+    }
+
+    if (overlay && saveBtn) {
+        saveBtn.addEventListener('click', () => {
+            const commentEl = document.getElementById('rating-comment');
+            if (!currentRatingOrderId || !currentRatingValue) {
+                alert('Lütfen bir puan seçin.');
+                return;
+            }
+
+            const payload = {
+                username: userName,
+                rating: currentRatingValue,
+                review: commentEl ? commentEl.value.trim() : ''
+            };
+
+            showLoader();
+
+            fetch(`/api/Order/${currentRatingOrderId}/rating`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+                .then(res => {
+                    if (!res.ok) throw new Error('Değerlendirme kaydedilemedi');
+                    return res.json();
+                })
+                .then(() => {
+                    alert('Değerlendirmen kaydedildi, teşekkürler!');
+                    overlay.classList.add('modal-hidden');
+                    currentRatingOrderId = null;
+                    currentRatingValue = 0;
+                    // Sipariş listesini yenile
+                    loadOrdersForCurrentUser();
+                })
+                .catch(err => {
+                    alert(err.message || 'Değerlendirme sırasında hata oluştu.');
+                })
+                .finally(() => {
+                    hideLoader();
+                });
+        });
+    }
+
+    // İlk açılışta yıldız rengi (varsayılan 5)
+    if (starsEl) {
+        const spans = starsEl.querySelectorAll('span');
+        if (spans.length) {
+            updateStarDisplay(starsEl, 5);
+        }
+    }
+});
 
 // Admin Menü Popup'ı aç
 function openAdminMenuModal() {
