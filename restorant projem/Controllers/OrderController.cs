@@ -203,6 +203,27 @@ public class OrderController : ControllerBase
             order.RatedAt
         });
     }
+
+        // Sipariş durumunu güncelle (Canlı sipariş akışı için)
+        [HttpPut("{orderId}/status")]
+        public async Task<IActionResult> UpdateStatus(int orderId, [FromBody] UpdateOrderStatusRequest request)
+        {
+            if (request == null || string.IsNullOrWhiteSpace(request.Status))
+                return BadRequest("Durum zorunlu.");
+
+            var validStatuses = new[] { "Yeni", "Hazırlanıyor", "Yolda", "Teslim Edildi", "İptal" };
+            if (!validStatuses.Contains(request.Status))
+                return BadRequest("Geçersiz durum.");
+
+            var order = await _context.Orders.FirstOrDefaultAsync(o => o.Id == orderId);
+            if (order == null)
+                return NotFound("Sipariş bulunamadı.");
+
+            order.Status = request.Status;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { order.Id, order.Status });
+        }
 }
 
 public class RateOrderRequest
@@ -210,6 +231,11 @@ public class RateOrderRequest
     public string Username { get; set; } = string.Empty;
     public int Rating { get; set; }
     public string? Review { get; set; }
+}
+
+public class UpdateOrderStatusRequest
+{
+    public string Status { get; set; } = string.Empty;
 }
 
 

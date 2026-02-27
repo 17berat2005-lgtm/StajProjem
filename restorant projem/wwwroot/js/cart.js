@@ -231,7 +231,8 @@ function loadOrdersForCurrentUser() {
                     .map(i => `${i.name} x${i.quantity}`)
                     .join(', ');
 
-                const canRate = (!o.rating || o.rating <= 0) && userRole !== 'SuperAdmin' && userRole !== 'Admin';
+                // Artık tüm roller (User / Admin / SuperAdmin) değerlendirme yapabilsin istiyoruz.
+                const canRate = (!o.rating || o.rating <= 0);
 
                 const ratingText = o.rating
                     ? `${'★'.repeat(o.rating)}${'☆'.repeat(5 - o.rating)}${o.review ? ' - ' + o.review : ''}`
