@@ -104,7 +104,6 @@ function wireEditModalEvents() {
         if (!nameInput || !descInput || !priceInput || !energyInput) return;
 
         const payload = {
-            id: updateId || 0,
             foodName: nameInput.value,
             description: descInput.value,
             price: parseFloat(priceInput.value),
@@ -121,14 +120,17 @@ function wireEditModalEvents() {
             method: method,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
-        }).then(() => {
-            updateId = null;
-            overlay.classList.add('modal-hidden');
-            location.reload();
-        }).finally(() => {
-            hideLoader();
-        });
-    });
+        })
+            .then(() => {
+                updateId = null;
+                overlay.classList.add('modal-hidden');
+                location.reload();
+            })
+            .catch(err => console.error('Hata:', err))
+            .finally(() => {
+                hideLoader();
+            });
+    }); // <--- Bu parantez ve noktalı virgülün olduğundan emin ol!
 }
 
 // Malzeme çıkarma popup'ı bağlama
@@ -218,6 +220,7 @@ function openIngredientModal(item) {
 function loadMenu() {
     showLoader();
 
+    // Aynı origin'den çağır: VS, IIS Express veya Docker hangi portta açıldıysa ona gider.
     fetch('/api/MenuDetail')
         .then(res => {
             if (!res.ok) throw new Error("Network response was not ok");

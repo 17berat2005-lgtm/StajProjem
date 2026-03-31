@@ -3,7 +3,7 @@ using restorant_projem.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// SQL Server ba�lant�s�n� aktif ediyoruz
+// SQL Server bağlantısını aktif ediyoruz
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -24,6 +24,7 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        db.Database.Migrate();
         db.Database.ExecuteSqlRaw(@"
 IF COL_LENGTH('Orders', 'Rating') IS NULL
     ALTER TABLE Orders ADD Rating INT NULL;
@@ -45,13 +46,12 @@ IF COL_LENGTH('Orders', 'RatedAt') IS NULL
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.UseHttpsRedirection();
 }
 
-app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 
 app.UseAuthorization();
 
 app.MapControllers();
-
 app.Run();

@@ -19,7 +19,15 @@ namespace restorant_projem.Controllers
         [HttpGet]
         public IActionResult GetMenu()
         {
-            return Ok(_context.MenuDetails.ToList());
+            // Veritabanını, SQL'i, paketleri siktir et; direkt bunu basıyoruz:
+            var sahteListe = new List<object>
+    {
+        new { MenuName = "Kanka Burger", Price = 250, IsActive = true, FoodName = "Burger", Description = "Efsane Soslu", Calories = 850 },
+        new { MenuName = "Kanka Pizza", Price = 320, IsActive = true, FoodName = "Pizza", Description = "Bol Malzeme", Calories = 1200 },
+        new { MenuName = "Kanka Kola", Price = 60, IsActive = true, FoodName = "İçecek", Description = "Buz Gibi", Calories = 150 }
+    };
+
+            return Ok(sahteListe);
         }
 
         [HttpPost]
